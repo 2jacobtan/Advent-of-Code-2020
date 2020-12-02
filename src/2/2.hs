@@ -22,10 +22,10 @@ isValid2 :: (Int, Int, Char, Text) -> Bool
 isValid2 (p1, p2, char, password) =
   let pwLength = T.length password
       test1 = case p1 <= pwLength of
-        True -> T.index password (p1-1) == char
+        True -> T.index password (p1 - 1) == char
         False -> False
       test2 = case p2 <= pwLength of
-        True -> T.index password (p2-1) == char
+        True -> T.index password (p2 - 1) == char
         False -> False
    in test1 `xor` test2
 
