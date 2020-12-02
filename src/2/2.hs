@@ -1,8 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 
 import Data.Bits (Bits (xor))
 import Data.Text (Text, pack)
