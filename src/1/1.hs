@@ -16,7 +16,7 @@ runAnswer3 xs =
     $ do
       (x, i) <- zip xs [1 ..]
       (y, j) <- drop i xs `zip` [1 ..]
-      z <- drop (i+j) xs
+      z <- drop (i + j) xs
       return [x, y, z]
 
 main = do
