@@ -24,6 +24,8 @@ dependencies:
 - pretty-simple
 - megaparsec
 - text
+- containers
+- transformers
 
 library:
   source-dirs: src
