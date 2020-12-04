@@ -30,10 +30,7 @@ parseKeyVal :: Parser (String, String)
 parseKeyVal = (,) <$> some letterChar <* char ':' <*>
   do
     pound <- optional (char '#')
-    (case pound of
-      Just _ -> ('#':)
-      Nothing -> id
-      ) <$> some alphaNumChar
+    maybe id (const ('#':)) pound <$> some alphaNumChar
 
 parseLine :: Parser [(String, String)]
 parseLine = (:) <$> parseKeyVal <*> many (try $ spaceChar *> parseKeyVal)
