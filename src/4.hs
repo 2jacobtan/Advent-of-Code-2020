@@ -71,15 +71,22 @@ isValidLine2 line = case runReaderT test dict of
         _ -> Nothing
       
       hcl <- ReaderT (Map.lookup "hcl")
-      lift $ either (const Nothing) (const $ Just ()) $ runParser
-        ((char '#' :: Parser Char) >> replicateM_ 6 (digitChar <|> asum (map char ['a'..'f'])) >> eof) "" (pack hcl)
+      -- lift $ either (const Nothing) (const $ Just ()) $ runParser
+      --   ((char '#' :: Parser Char) >> replicateM_ 6 (digitChar <|> asum (map char ['a'..'f'])) >> eof) "" (pack hcl)
+      -- ! ^ Replaced with parseMaybe version below.
+      -- ! ^ See https://hackage.haskell.org/package/megaparsec-9.0.1/docs/Text-Megaparsec.html#v:parseMaybe
+      lift $ parseMaybe
+        ((char '#' :: Parser Char) >> replicateM_ 6 (digitChar <|> asum (map char ['a'..'f']))) (pack hcl)
       
       ecl <- ReaderT (Map.lookup "ecl")
       lift $ if ecl `elem` ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"] then Just () else Nothing
       
       pid <- ReaderT (Map.lookup "pid")
-      lift $ either (const Nothing) (const $ Just ()) $ runParser
-        ((replicateM_ 9 digitChar :: Parser ()) >> eof) "" (pack pid)
+      -- lift $ either (const Nothing) (const $ Just ()) $ runParser
+      --   ((replicateM_ 9 digitChar :: Parser ()) >> eof) "" (pack pid)
+      -- ! ^ Replaced with parseMaybe version below
+      lift $ parseMaybe
+        (replicateM_ 9 digitChar :: Parser ()) (pack pid)
 
 main :: IO ()
 main = do
