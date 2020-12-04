@@ -3,6 +3,7 @@
 import Control.Monad (replicateM_)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Text (Text, pack)
 import Data.Void (Void)
@@ -52,6 +53,7 @@ isValidLine2 line = case runReaderT test dict of
   Nothing -> False
   where
     dict = Map.fromList line
+    test :: ReaderT (Map [Char] String) Maybe ()
     test = do
       byr <- read @Int <$> ReaderT (Map.lookup "byr")
       lift $ if 1920 <= byr && byr <= 2002 then Just () else Nothing
