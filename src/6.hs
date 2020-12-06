@@ -1,24 +1,18 @@
-import Data.Function ((&))
+import Control.Arrow ((>>>))
 import Data.Functor ((<&>))
 import Data.List (foldl1')
 import Data.List.Split (splitOn)
 import qualified Data.Set as Set
 
 solve :: (Foldable t, Ord a) => [t [a]] -> Int
-solve xxs =
-  xxs
-    & map concat
-    & map Set.fromList
-    & map Set.size
-    & sum
+solve =
+  map (concat >>> Set.fromList >>> Set.size)
+    >>> sum
 
 solve2 :: Ord a => [[[a]]] -> Int
-solve2 xxs =
-  xxs
-    & map (map Set.fromList)
-    & map (foldl1' Set.intersection)
-    & map Set.size
-    & sum
+solve2 =
+  map (map Set.fromList >>> foldl1' Set.intersection >>> Set.size)
+    >>> sum
 
 main :: IO ()
 main = do
