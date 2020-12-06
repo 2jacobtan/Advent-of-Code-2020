@@ -26,6 +26,7 @@ dependencies:
 - text
 - containers
 - transformers
+- split
 
 library:
   source-dirs: src

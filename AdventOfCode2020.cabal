@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf01b4b66f26cf014063cfef3a21819cf0415e94c9d8e8c71b6e5d8ee714944f
+-- hash: 01345b73a20239a202de73e277c1c7df8558bc7a070f289d59581f05ee6d39c1
 
 name:           AdventOfCode2020
 version:        0.1.0.0
@@ -37,6 +37,7 @@ library
     , containers
     , megaparsec
     , pretty-simple
+    , split
     , text
     , transformers
   default-language: Haskell2010
@@ -54,6 +55,7 @@ executable AdventOfCode2020-exe
     , containers
     , megaparsec
     , pretty-simple
+    , split
     , text
     , transformers
   default-language: Haskell2010
@@ -72,6 +74,7 @@ test-suite AdventOfCode2020-test
     , containers
     , megaparsec
     , pretty-simple
+    , split
     , text
     , transformers
   default-language: Haskell2010
