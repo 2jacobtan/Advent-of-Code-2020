@@ -29,7 +29,7 @@ parseLine
     where
       contents = map (fmap unwords . splitAt 1 . take 3) contentsRaw
 
-satisfy :: Ord a => a -> Map a (Set a) -> Set a
+satisfy :: String -> Map String (Set String) -> Set String
 satisfy start dict
   = go Set.empty Set.empty [start]
   where
