@@ -41,7 +41,7 @@ satisfy start dict
         go
           (Set.union seen nexts)
           (Set.union answers nexts)
-          (foldr (:) xs (Set.toList nexts))
+          (xs ++ Set.toList nexts)
 
 
 -- Part 2
