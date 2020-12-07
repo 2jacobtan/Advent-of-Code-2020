@@ -9,6 +9,7 @@ import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Maybe (fromMaybe)
+import Data.Monoid (Sum(Sum, getSum))
 
 main :: IO ()
 main = do
@@ -64,9 +65,11 @@ parseLine2
         x -> read @Int x
 
 countBags :: String -> Map String [(Int, String)] -> Int
-countBags start dict = go start
+countBags start dict = getSum $ go start
   where
     inners outer = fromMaybe [] (Map.lookup outer dict)
     go bag = sum . map (\(n, innerBag) -> n + n * go innerBag) . inners $ bag
+    --- | alternative version using foldMap
+    -- go bag = foldMap (\(Sum -> n, innerBag) -> n + n * go innerBag) . inners $ bag
 
   
