@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
@@ -35,7 +36,7 @@ makeDict = Map.fromList . zip [1 ..]
 solve1 :: Map Int Instruction -> Either Int Int
 solve1 dict = go Set.empty 0 1
   where
-    go seen sum k
+    go seen !sum !k
       | Set.member k seen = Right sum -- on reaching previously seen line
       | otherwise = case Map.lookup k dict of
         Nothing -> Left sum -- on jumping out of valid range of line numbers
@@ -54,7 +55,7 @@ solve2 :: Map Int Instruction -> Maybe Int
 solve2 dict = go Set.empty 0 1
   where
     lastLine = Map.size dict -- for part 2
-    go seen sum k
+    go seen !sum !k
       | Set.member k seen = Nothing -- on reaching previously seen line
       | otherwise = case Map.lookup k dict of
         Nothing -> Nothing -- on jumping out of valid range of line numbers
