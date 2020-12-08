@@ -4,8 +4,8 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 
 import Data.Functor ((<&>))
-import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as Map
 import qualified Data.Set as Set
 import Data.Maybe (mapMaybe)
 
@@ -30,10 +30,10 @@ parseInstruction = \case
   ["acc", n] -> Acc $ parseNum n
   _ -> error "invalid parseInstruction"
 
-makeDict :: [Instruction] -> Map Int Instruction
+makeDict :: [Instruction] -> IntMap Instruction
 makeDict = Map.fromList . zip [1 ..]
 
-solve1 :: Map Int Instruction -> Either Int Int
+solve1 :: IntMap Instruction -> Either Int Int
 solve1 dict = go Set.empty 0 1
   where
     go seen !sum !k
@@ -51,7 +51,7 @@ solve1 dict = go Set.empty 0 1
 
 -- Part 2
 
-solve2 :: Map Int Instruction -> Maybe Int
+solve2 :: IntMap Instruction -> Maybe Int
 solve2 dict = go Set.empty 0 1
   where
     lastLine = Map.size dict -- for part 2
@@ -75,7 +75,7 @@ solve2 dict = go Set.empty 0 1
               Jmp _ -> Nothing -- invalid if jump back or jump forward >1
             else go (Set.insert k seen) newSum nextLine
 
-solve2result :: Map Int Instruction -> [Int]
+solve2result :: IntMap Instruction -> [Int]
 solve2result dict = mapMaybe solve2 possibilities
   where
     possibilities = Map.elems $ Map.mapMaybeWithKey f dict
