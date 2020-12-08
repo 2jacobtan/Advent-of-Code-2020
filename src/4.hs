@@ -11,7 +11,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Monad.Trans.Reader (ReaderT(ReaderT, runReaderT))
 import Control.Monad.Trans.Class (MonadTrans(lift))
-import Data.Foldable (asum)
+-- import Data.Foldable (asum)
 
 type Parser = Parsec Void Text
 
@@ -76,7 +76,9 @@ isValidLine2 line = case runReaderT test dict of
       -- ! ^ Replaced with parseMaybe version below.
       -- ! ^ See https://hackage.haskell.org/package/megaparsec-9.0.1/docs/Text-Megaparsec.html#v:parseMaybe
       lift $ parseMaybe
-        ((char '#' :: Parser Char) >> replicateM_ 6 (digitChar <|> asum (map char ['a'..'f']))) (pack hcl)
+        ((char '#' :: Parser Char) >> replicateM_ 6 (digitChar <|> satisfy (`elem` ['a'..'f']))) (pack hcl)
+        -- replaced: asum (map char ['a'..'f'])
+        -- with: satisfy (`elem` ['a'..'f'])
       
       ecl <- ReaderT (Map.lookup "ecl")
       lift $ if ecl `elem` ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"] then Just () else Nothing
