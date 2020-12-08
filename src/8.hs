@@ -74,8 +74,8 @@ solve2 dict = go Set.empty 0 1
               Jmp _ -> Nothing -- invalid if jump back or jump forward >1
             else go (Set.insert k seen) newSum nextLine
 
-solve2result :: Map Int Instruction -> Int
-solve2result dict = head . mapMaybe solve2 $ possibilities
+solve2result :: Map Int Instruction -> [Int]
+solve2result dict = mapMaybe solve2 possibilities
   where
     possibilities = Map.elems $ Map.mapMaybeWithKey f dict
     f k = \case
