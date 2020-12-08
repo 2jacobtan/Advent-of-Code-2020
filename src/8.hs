@@ -31,7 +31,7 @@ parseInstruction = \case
   _ -> error "invalid parseInstruction"
 
 makeDict :: [Instruction] -> IntMap Instruction
-makeDict = Map.fromList . zip [1 ..]
+makeDict = Map.fromAscList . zip [1 ..]
 
 solve1 :: IntMap Instruction -> Either Int Int
 solve1 dict = go Set.empty 0 1
