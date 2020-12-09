@@ -55,17 +55,17 @@ solve2 n xs0 =
   where
     f x xs accum
       | totalSum == n =
-          getSmallLarge accum
+          Just $ getSmallLarge accum
       | totalSum > n =
         case trimFront (totalSum - n) accum of
           Left residue -> xs (residue |> x)
           Right residue ->
-            getSmallLarge residue
+            Just $ getSmallLarge residue
       | totalSum < n = xs $ accum |> x
       where
         totalSum =  sum accum -- & Debug.trace (show accum)
         getSmallLarge seqList = 
-          Just (minimum seqList, maximum seqList) -- & Debug.trace (show seqList)
+          (minimum seqList, maximum seqList) -- & Debug.trace (show seqList)
 
 trimFront :: Int -> Seq Int -> Either (Seq Int) (Seq Int)
 trimFront (n::Int)
