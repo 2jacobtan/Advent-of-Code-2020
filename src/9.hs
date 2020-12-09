@@ -80,7 +80,8 @@ trimFront (n::Int) -- trim off excess of n
   --- ^ exact trim means valid solution!
   | otherwise = \case
       (x:<|xs) -> trimFront (n - x) xs
-      a@S.Empty -> Left (-n,a)
+      a@S.Empty -> Left (-n,a) -- I think this path is never reached.
+                    -- When there is excess, the window cannot be empty.
 
 -- >>> trimFront 3 $ S.fromList $ replicate 5 1
 -- >>> trimFront 0 $ S.fromList $ replicate 5 1
