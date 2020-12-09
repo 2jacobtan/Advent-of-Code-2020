@@ -55,7 +55,9 @@ pairSums :: Seq Int -> Seq Int
 pairSums some25 = sum <$> choose2 some25
 
 -- Part 2
--- | A hyper-efficient algorithm that moves the left and right bounds of the window as many times as needed without calculating the sum of the window, by tracking the "lack" (shortfall from required sum) directly.
+-- | A hyper-efficient algorithm that moves the left and right bounds of the
+--   window as many times as needed without calculating the sum of the window,
+--   by tracking the "lack" (shortfall from required sum) directly.
 
 solve2 :: Int -> [Int] -> Maybe (Int,Int)
 solve2 n xs0 =
