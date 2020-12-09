@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
@@ -51,28 +52,27 @@ pairSums some25 = sum <$> choose2 some25
 
 solve2 :: Int -> [Int] -> Maybe (Int,Int)
 solve2 n xs0 =
-  foldr f (const Nothing) xs0 S.empty
+  foldr f (\_ _ -> Nothing) xs0 n S.empty
   where
-    f x xs accum
-      | totalSum == n =
-          Just $ getSmallLarge accum
-      | totalSum > n =
-        case trimFront (totalSum - n) accum of
-          Left residue -> xs (residue |> x)
+    f x xs (lack::Int) (window::Seq Int) -- extra two parameters are both accumulators
+      | x == lack =
+          Just $ getSmallLarge (window |> x) -- & Debug.trace (show $ window |> x)
+      | x > lack =
+        case trimFront (x - lack) window of
+          Left (net, residue) -> xs net (residue |> x) -- & Debug.trace (show $ residue |> x)
           Right residue ->
-            Just $ getSmallLarge residue
-      | totalSum < n = xs $ accum |> x
+            Just $ getSmallLarge residue -- & Debug.trace (show residue)
+      | x < lack = xs (lack - x) (window |> x) -- & Debug.trace (show $ window |> x)
       where
-        totalSum =  sum accum -- & Debug.trace (show accum)
         getSmallLarge seqList = 
           (minimum seqList, maximum seqList) -- & Debug.trace (show seqList)
 
-trimFront :: Int -> Seq Int -> Either (Seq Int) (Seq Int)
+trimFront :: Int -> Seq Int -> Either (Int, Seq Int) (Seq Int)
 trimFront (n::Int)
-  | n < 0 = Left
+  | n < 0 = Left . (-n,)
   | n == 0 = Right -- exact trim means valid solution!
   | otherwise = \case
-      a@S.Empty -> Left a
+      a@S.Empty -> Left (n,a)
       (x:<|xs) -> trimFront (n - x) xs
 
 -- >>> trimFront 3 $ S.fromList $ replicate 5 1
