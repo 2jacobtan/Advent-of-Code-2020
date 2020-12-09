@@ -58,10 +58,6 @@ pairSums some25 = sum <$> choose2 some25
 -- | A hyper-efficient algorithm that moves the left and right bounds of the
 --   window as many times as needed without calculating the sum of the window,
 --   by tracking the "lack" (shortfall from required sum) directly.
--- | The algorithm can be more efficient (by a constant factor) by removing
---   the queue and just keeping track of the indices of the lower and upper
---   bounds. Then when a solution is found, lookup relevant portion of the list
---   using the indices.
 solve2 :: Int -> [Int] -> Maybe (Int,Int)
 solve2 n xs0 =
   foldr f (\_ _ -> Nothing) xs0 n S.empty
