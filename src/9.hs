@@ -17,12 +17,18 @@ import Data.Maybe (fromMaybe)
 main :: IO ()
 main = do
   input <- readFile "9.txt" <&> lines <&> map (read @Int)
+  
+  putStrLn "__Part 1"
   let part1sample = fromMaybe (-1) $ solve1 5 sample
   print part1sample
   let part1 = fromMaybe (-1) $ solve1 25 input
   print part1
+  
+  putStrLn ""
+  putStrLn "__Part 2 sample"
   print $ solve2 part1sample sample
   let (x,y) = fromMaybe (-1,-1) $ solve2 part1 input
+  putStrLn "__Part 2 answer"
   print (x,y)
   print $ x+y
 
@@ -58,22 +64,23 @@ solve2 n xs0 =
       | x == lack =
           Just $ getSmallLarge (window |> x) -- & Debug.trace (show $ window |> x)
       | x > lack =
-        case trimFront (x - lack) window of
-          Left (net, residue) -> xs net (residue |> x) -- & Debug.trace (show $ residue |> x)
-          Right residue ->
-            Just $ getSmallLarge residue -- & Debug.trace (show residue)
+        case trimFront (x - lack) (window |> x) of
+          Left (net, residue) -> xs net residue -- & Debug.trace (show $ residue |> x)
+          Right valid ->
+            Just $ getSmallLarge valid -- & Debug.trace (show valid)
       | x < lack = xs (lack - x) (window |> x) -- & Debug.trace (show $ window |> x)
       where
         getSmallLarge seqList = 
           (minimum seqList, maximum seqList) -- & Debug.trace (show seqList)
 
 trimFront :: Int -> Seq Int -> Either (Int, Seq Int) (Seq Int)
-trimFront (n::Int)
-  | n < 0 = Left . (-n,)
-  | n == 0 = Right -- exact trim means valid solution!
+trimFront (n::Int) -- trim off excess of n
+  | n < 0 = Left . (-n,) -- excess = n; lack = -n
+  | n == 0 = Right -- . (\x -> Debug.trace (show x) x)
+  --- ^ exact trim means valid solution!
   | otherwise = \case
-      a@S.Empty -> Left (n,a)
       (x:<|xs) -> trimFront (n - x) xs
+      a@S.Empty -> Left (-n,a)
 
 -- >>> trimFront 3 $ S.fromList $ replicate 5 1
 -- >>> trimFront 0 $ S.fromList $ replicate 5 1
