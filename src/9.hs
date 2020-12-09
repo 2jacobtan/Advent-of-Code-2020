@@ -7,21 +7,23 @@ module Day9 where
 
 import Data.Function ((&))
 import Data.Functor ((<&>))
-import Data.Sequence ((|>), Seq((:<|),(:|>)))
+import Data.Sequence ((|>), Seq((:<|)))
 import qualified Data.Sequence as S
 import Data.Maybe (fromMaybe)
-import qualified Debug.Trace as Debug
+-- import qualified Debug.Trace as Debug
 
 
 main :: IO ()
 main = do
   input <- readFile "9.txt" <&> lines <&> map (read @Int)
-  let part1 = fromMaybe (-1) $ solve1 25 input
-  print part1
   let part1sample = fromMaybe (-1) $ solve1 5 sample
   print part1sample
-  -- print $ solve2 part1 input
+  let part1 = fromMaybe (-1) $ solve1 25 input
+  print part1
   print $ solve2 part1sample sample
+  let (x,y) = fromMaybe (-1,-1) $ solve2 part1 input
+  print (x,y)
+  print $ x+y
 
 -- | generate 2-combinations from a list
 choose2 :: Seq a -> Seq [a]
@@ -53,23 +55,22 @@ solve2 n xs0 =
   where
     f x xs accum
       | totalSum == n =
-          getFirstLast accum
+          getSmallLarge accum
       | totalSum > n =
         case trimFront (totalSum - n) accum of
           Left residue -> xs (residue |> x)
           Right residue ->
-            getFirstLast residue
+            getSmallLarge residue
       | totalSum < n = xs $ accum |> x
       where
-        totalSum = Debug.trace (show accum) $ sum accum
-        getFirstLast seqList = 
-          let (start:<|_) = seqList; (_:|>stop) = seqList
-          in Just (start, stop)
+        totalSum =  sum accum -- & Debug.trace (show accum)
+        getSmallLarge seqList = 
+          Just (minimum seqList, maximum seqList) -- & Debug.trace (show seqList)
 
 trimFront :: Int -> Seq Int -> Either (Seq Int) (Seq Int)
 trimFront (n::Int)
   | n < 0 = Left
-  | n == 0 = Right
+  | n == 0 = Right -- exact trim means valid solution!
   | otherwise = \case
       a@S.Empty -> Left a
       (x:<|xs) -> trimFront (n - x) xs
@@ -77,11 +78,11 @@ trimFront (n::Int)
 -- >>> trimFront 3 $ S.fromList $ replicate 5 1
 -- >>> trimFront 0 $ S.fromList $ replicate 5 1
 -- >>> trimFront (-1) $ S.fromList $ replicate 5 1
--- fromList [1,1]
+-- Right (fromList [1,1])
 
--- fromList [1,1,1,1,1]
+-- Right (fromList [1,1,1,1,1])
 
--- fromList [1,1,1,1,1]
+-- Left (fromList [1,1,1,1,1])
 
 sample =
   [
