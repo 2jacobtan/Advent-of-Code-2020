@@ -20,6 +20,10 @@ answer :: String -> Int
 answer (splitAt 7 -> (row,col)) =
   rowIndex row * 8 + colIndex col
 
+-- when writing the solution for part 1 above, I blindly followed the question's instructions, and completely forgot the algorithm to sum a binary number's digits:
+-- foldl' (\x y -> x * 2 + y) 0
+-- from https://github.com/haskelling/aoc2020/blob/main/5b.hs
+
 main :: IO ()
 main = do
   inputLines <- lines <$> readFile "5.txt"
