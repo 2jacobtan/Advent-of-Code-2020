@@ -1,7 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -11,7 +7,6 @@
 
 import Data.Function ((&))
 import Data.Functor ((<&>))
-import Control.Arrow ((>>>))
 import Data.List (sort, foldl')
 import qualified Debug.Trace as Debug
 import Data.Monoid (Product(getProduct, Product))
