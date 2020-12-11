@@ -11,6 +11,7 @@ import Data.Functor ((<&>))
 import Data.Array ((!), Array, elems, listArray)
 import Data.List (delete)
 import Criterion.Main (whnf, bench, defaultMain)
+import Data.Maybe (catMaybes)
 
 data Spot = O | E | F | B -- Occupied | Empty | Floor | Border (imaginary)
   deriving (Show, Eq)
@@ -71,7 +72,7 @@ part1 gridSize grid0 = length . filter (==O) . elems $ solve1 gridSize grid0
 -- Part 2
 
 solve2 :: (Int, Int) -> Grid -> Grid
-solve2 (m,n) = go
+solve2 (m,n) grid0 = go grid0
   where
     range = ((0,0),(m+1,n+1))
     indices = (,) <$> [0..(m+1)] <*> [0..(n+1)]
@@ -91,35 +92,21 @@ solve2 (m,n) = go
         F -> F
         B -> B
       adjacents2 :: (Int, Int) -> [Spot]
-      adjacents2 (i,j) = directions
-        where
-          --- | first-draft; it worked but so ugly LOL
-          -- north = [(i',j) | i' <- reverse [1..(i-1)] ]
-          -- south = [(i',j) | i' <- [(i+1)..m] ]
-          -- west = [(i,j') | j' <- reverse [1..(j-1)] ]
-          -- east = [(i,j') | j' <- [(j+1)..n] ]
-          -- northE = [(i',j') | i' <- reverse [1..(i-1)] | j' <- [(j+1)..n] ]
-          -- southE = [(i',j') | i' <- [(i+1)..m] | j' <- [(j+1)..n] ]
-          -- southW = [(i',j') | i' <- [(i+1)..m] | j' <- reverse [1..(j-1)] ]
-          -- northW = [(i',j') | i' <- reverse [1..(i-1)] | j' <- reverse [1..(j-1)] ]
-          -- directions =
-          --   [north, south, west, east, northE, southE, southW, northW]
-          --   <&> foldr (\ij r -> case grid ! ij of F -> r; x -> x) F
-          directions =
-            linesOfSight ! (i,j)
-            <&> foldr (\ij r -> case grid ! ij of F -> r; x -> x) F
-            -- Looking for a seat in each direction stops when we reach
-            -- the imaginary border B.
+      adjacents2 (i,j) = linesOfSight ! (i,j) & map (grid !)
 
     linesOfSight = listArray range $
       map los indices
       where
-        los (i,j) = map (findLineOfSight (i,j)) deltas
+        los (i,j) = map (findLineOfSight (i,j)) deltas & catMaybes
         deltas = delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
         findLineOfSight (i,j) _delta@(di,dj) =
           iterate (\(x,y) -> (x+di,y+dj)) (i,j)
-          & tail
-          & takeWhile (\(i',j') -> 1 <= i' && i' <= n && 1 <= j' && j' <= n )    
+          & tail & findSeat
+        findSeat =
+          foldr (\ij r -> case grid0 ! ij of E -> Just ij; B -> Nothing; _ -> r)
+            undefined
+        -- Looking for a seat in each direction stops when we reach
+        -- the imaginary border B.
 
 part2 :: (Int, Int) -> Grid -> Int
 part2 gridSize grid0 = length . filter (==O) . elems $ solve2 gridSize grid0
@@ -140,6 +127,12 @@ main = do
                         _ -> error "unrecognised char"
       input2 = input1 & concatMap (map parseChar)
       input = listArray ((0,0),(m+1,n+1)) input2
+
+  putStrLn "\n__Part 1"
+  print $ part1 (m,n) input
+
+  putStrLn "\n__Part 2"
+  print $ part2 (m,n) input  
 
   defaultMain
     [

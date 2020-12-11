@@ -132,6 +132,13 @@ main = do
       input2 = input1 & concatMap (map parseChar)
       input = listArray ((0,0),(m+1,n+1)) input2
 
+  putStrLn "\n__Part 1"
+  -- putStrLn "skipped to save time for part 2"
+  print $ part1 (m,n) input
+
+  putStrLn "\n__Part 2"
+  print $ part2 (m,n) input
+
   defaultMain
     [
       bench "old" $ whnf (part2 (m,n)) input
