@@ -10,14 +10,15 @@ import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.Array ((!), Array, elems, listArray)
 import Data.List (delete)
+import Criterion.Main (whnf, bench, defaultMain)
 
 data Spot = O | E | F | B -- Occupied | Empty | Floor | Border (imaginary)
   deriving (Show, Eq)
 
 type Grid = Array (Int, Int) Spot
 
-main :: IO ()
-main = do
+main0 :: IO ()
+main0 = do
   input0 <- readFile "11.txt" <&> lines
   let n = length . head $ input0
       m = length input0
@@ -125,3 +126,22 @@ part2 gridSize grid0 = length . filter (==O) . elems $ solve2 gridSize grid0
 
 -- >>> delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
 -- [(0,1),(0,-1),(1,0),(1,1),(1,-1),(-1,0),(-1,1),(-1,-1)]
+
+main :: IO ()
+main = do
+  input0 <- readFile "11.txt" <&> lines
+  let n = length . head $ input0
+      m = length input0
+      -- add borders
+      input1 = replicate (n+2) 'B'
+        : map ((++ ['B']) . ('B':)) input0
+        ++ [replicate (n+2) 'B']
+      parseChar = \case '#' -> O; 'L' -> E; '.' -> F; 'B' -> B
+                        _ -> error "unrecognised char"
+      input2 = input1 & concatMap (map parseChar)
+      input = listArray ((0,0),(m+1,n+1)) input2
+
+  defaultMain
+    [
+      bench "new" $ whnf (part2 (m,n)) input
+    ]
