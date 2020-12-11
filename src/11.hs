@@ -21,7 +21,7 @@ main = do
   input0 <- readFile "11.txt" <&> lines
   let n = length . head $ input0
       m = length input0
-      -- pad borders empty cells (=floor)
+      -- add borders
       input1 = replicate (n+2) 'B'
         : map ((++ ['B']) . ('B':)) input0
         ++ [replicate (n+2) 'B']
@@ -32,8 +32,8 @@ main = do
   -- print <$> take 7 .  chunksOf (n+2) $ elems input
   -- print $ last .  chunksOf (n+2) $ elems input
   putStrLn "\n__Part 1"
-  putStrLn "skipped to save time for part 2"
-  -- print $ part1 (m,n) input
+  -- putStrLn "skipped to save time for part 2"
+  print $ part1 (m,n) input
 
   putStrLn "\n__Part 2"
   print $ part2 (m,n) input
