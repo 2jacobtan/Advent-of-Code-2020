@@ -1,4 +1,4 @@
-{-# LANGUAGE ParallelListComp #-}
+-- {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
@@ -11,7 +11,7 @@ import Data.Functor ((<&>))
 import Data.Array ((!), Array, elems, listArray)
 import Data.List (delete)
 import Criterion.Main (whnf, bench, defaultMain)
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import Linear.V2 (V2(V2))
 
 data Spot = O | E | F | B -- Occupied | Empty | Floor | Border (imaginary)
@@ -31,7 +31,7 @@ main0 = do
       parseChar = \case '#' -> O; 'L' -> E; '.' -> F; 'B' -> B
                         _ -> error "unrecognised char"
       input2 = input1 & concatMap (map parseChar)
-      input = listArray ((V2 0 0),(V2 (m+1) (n+1))) input2
+      input = listArray (V2 0 0,V2 (m+1) (n+1)) input2
   -- print <$> take 7 .  chunksOf (n+2) $ elems input
   -- print $ last .  chunksOf (n+2) $ elems input
   putStrLn "\n__Part 1"
@@ -76,7 +76,7 @@ part1 gridSize grid0 = length . filter (==O) . elems $ solve1 gridSize grid0
 solve2 :: (Int, Int) -> Grid -> Grid
 solve2 (m,n) grid0 = go grid0
   where
-    range = ((V2 0 0),(V2 (m+1) (n+1)))
+    range = (V2 0 0,V2 (m+1) (n+1))
     indices = V2 <$> [0..(m+1)] <*> [0..(n+1)]
     go grid =
       let nextGrid = listArray range $
@@ -99,7 +99,7 @@ solve2 (m,n) grid0 = go grid0
     linesOfSight = listArray range $
       map los indices
       where
-        los (V2 i j) = map (findLineOfSight (i,j)) deltas & catMaybes
+        los (V2 i j) = mapMaybe (findLineOfSight (i,j)) deltas
         deltas = delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
         findLineOfSight (i,j) _delta@(di,dj) =
           iterate (\(V2 x y) -> V2 (x+di) (y+dj)) (V2 i j)
