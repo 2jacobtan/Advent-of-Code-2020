@@ -72,9 +72,11 @@ part1 gridSize grid0 = length . filter (==O) . elems $ solve1 gridSize grid0
 solve2 :: (Int, Int) -> Grid -> Grid
 solve2 (m,n) = go
   where
+    range = ((0,0),(m+1,n+1))
+    indices = (,) <$> [0..(m+1)] <*> [0..(n+1)]
     go grid =
-      let nextGrid = listArray ((0,0),(m+1,n+1)) $
-            (,) <$> [0..(m+1)] <*> [0..(n+1)]
+      let nextGrid = listArray range $
+            indices
             & map nextSeatState
        in if nextGrid == grid then grid else go nextGrid
       where
@@ -103,13 +105,20 @@ solve2 (m,n) = go
           --   [north, south, west, east, northE, southE, southW, northW]
           --   <&> foldr (\ij r -> case grid ! ij of F -> r; x -> x) F
           directions =
-            let deltas = delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
-                findLineOfSight _delta@(di,dj) = tail $ iterate (\(x,y) -> (x+di,y+dj)) (i,j)
-                linesOfSight = map findLineOfSight deltas
-             in linesOfSight
-                <&> foldr (\ij r -> case grid ! ij of F -> r; x -> x) F
-                -- Looking for a seat in each direction stops when we reach
-                -- the imaginary border B.
+            linesOfSight ! (i,j)
+            <&> foldr (\ij r -> case grid ! ij of F -> r; x -> x) F
+            -- Looking for a seat in each direction stops when we reach
+            -- the imaginary border B.
+
+    linesOfSight = listArray range $
+      map los indices
+      where
+        los (i,j) = map (findLineOfSight (i,j)) deltas
+        deltas = delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
+        findLineOfSight (i,j) _delta@(di,dj) =
+          iterate (\(x,y) -> (x+di,y+dj)) (i,j)
+          & tail
+          & takeWhile (\(i',j') -> 1 <= i' && i' <= n && 1 <= j' && j' <= n )    
 
 part2 :: (Int, Int) -> Grid -> Int
 part2 gridSize grid0 = length . filter (==O) . elems $ solve2 gridSize grid0
