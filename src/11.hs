@@ -108,6 +108,8 @@ solve2 (m,n) = go
                 linesOfSight = map findLineOfSight deltas
              in linesOfSight
                 <&> foldr (\ij r -> case grid ! ij of F -> r; x -> x) F
+                -- Looking for a seat in each direction stops when we reach
+                -- the imaginary border B.
 
 part2 :: (Int, Int) -> Grid -> Int
 part2 gridSize grid0 = length . filter (==O) . elems $ solve2 gridSize grid0
