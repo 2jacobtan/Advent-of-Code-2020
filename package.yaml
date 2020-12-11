@@ -29,6 +29,7 @@ dependencies:
 - split
 - array
 - criterion
+- linear
 
 library:
   source-dirs: src

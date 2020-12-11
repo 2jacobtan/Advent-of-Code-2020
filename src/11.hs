@@ -12,11 +12,12 @@ import Data.Array ((!), Array, elems, listArray)
 import Data.List (delete)
 import Criterion.Main (whnf, bench, defaultMain)
 import Data.Maybe (catMaybes)
+import Linear.V2 (V2(V2))
 
 data Spot = O | E | F | B -- Occupied | Empty | Floor | Border (imaginary)
   deriving (Show, Eq)
 
-type Grid = Array (Int, Int) Spot
+type Grid = Array (V2 Int) Spot
 
 main0 :: IO ()
 main0 = do
@@ -30,7 +31,7 @@ main0 = do
       parseChar = \case '#' -> O; 'L' -> E; '.' -> F; 'B' -> B
                         _ -> error "unrecognised char"
       input2 = input1 & concatMap (map parseChar)
-      input = listArray ((0,0),(m+1,n+1)) input2
+      input = listArray ((V2 0 0),(V2 (m+1) (n+1))) input2
   -- print <$> take 7 .  chunksOf (n+2) $ elems input
   -- print $ last .  chunksOf (n+2) $ elems input
   putStrLn "\n__Part 1"
@@ -40,16 +41,17 @@ main0 = do
   putStrLn "\n__Part 2"
   print $ part2 (m,n) input
 
-adjacents1 (i,j) = delete (i,j) [(i',j') | i' <- [i-1 .. i+1], j' <- [j-1 .. j+1]]
+adjacents1 (V2 i j) = delete (V2 i j) [V2 i' j' | i' <- [i-1 .. i+1], j' <- [j-1 .. j+1]]
 -- >>> adjacents1 (2,2)
 -- [(1,1),(1,2),(1,3),(2,1),(2,3),(3,1),(3,2),(3,3)]
 
 solve1 :: (Int, Int) -> Grid -> Grid
 solve1 (m,n) = go
   where
+    go :: Grid -> Grid
     go grid =
-      let nextGrid = listArray ((0,0),(m+1,n+1)) $
-            (,) <$> [0..(m+1)] <*> [0..(n+1)]
+      let nextGrid = listArray (V2 0 0, V2 (m+1) (n+1)) $
+            V2 <$> [0..(m+1)] <*> [0..(n+1)]
             & map nextSeatState
        in if nextGrid == grid then grid else go nextGrid
       where
@@ -74,8 +76,8 @@ part1 gridSize grid0 = length . filter (==O) . elems $ solve1 gridSize grid0
 solve2 :: (Int, Int) -> Grid -> Grid
 solve2 (m,n) grid0 = go grid0
   where
-    range = ((0,0),(m+1,n+1))
-    indices = (,) <$> [0..(m+1)] <*> [0..(n+1)]
+    range = ((V2 0 0),(V2 (m+1) (n+1)))
+    indices = V2 <$> [0..(m+1)] <*> [0..(n+1)]
     go grid =
       let nextGrid = listArray range $
             indices
@@ -91,16 +93,16 @@ solve2 (m,n) grid0 = go grid0
         E -> if shouldEmptySwap coord then O else E
         F -> F
         B -> B
-      adjacents2 :: (Int, Int) -> [Spot]
-      adjacents2 (i,j) = linesOfSight ! (i,j) & map (grid !)
+      adjacents2 :: V2 Int -> [Spot]
+      adjacents2 (V2 i j) = linesOfSight ! V2 i j & map (grid !)
 
     linesOfSight = listArray range $
       map los indices
       where
-        los (i,j) = map (findLineOfSight (i,j)) deltas & catMaybes
+        los (V2 i j) = map (findLineOfSight (i,j)) deltas & catMaybes
         deltas = delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
         findLineOfSight (i,j) _delta@(di,dj) =
-          iterate (\(x,y) -> (x+di,y+dj)) (i,j)
+          iterate (\(V2 x y) -> V2 (x+di) (y+dj)) (V2 i j)
           & tail & findSeat
         findSeat =
           foldr (\ij r -> case grid0 ! ij of E -> Just ij; B -> Nothing; _ -> r)
@@ -126,10 +128,10 @@ main = do
       parseChar = \case '#' -> O; 'L' -> E; '.' -> F; 'B' -> B
                         _ -> error "unrecognised char"
       input2 = input1 & concatMap (map parseChar)
-      input = listArray ((0,0),(m+1,n+1)) input2
+      input = listArray (V2 0 0,V2 (m+1) (n+1)) input2
 
   putStrLn "\n__Part 1"
-  print $ part1 (m,n) input
+  print $ part1 (m, n) input
 
   putStrLn "\n__Part 2"
   print $ part2 (m,n) input  
