@@ -9,8 +9,9 @@ module Day12 where
 
 -- import Data.Function ((&))
 import Data.Functor ((<&>))
-import Linear.V2 (V2(V2), perp)
 import Data.List (foldl')
+import Linear.V2 (V2(V2), perp)
+import Linear.Vector ((^*))
 -- import qualified Debug.Trace as Debug
 
 main :: IO ()
@@ -29,10 +30,10 @@ data Move = C (V2 Int) | T Int |  F Int -- Cardinal | Turn | Forward
 parseLine :: [Char] -> Move
 parseLine line@(move:(read @Int -> n)) =
   case move of
-    'N' -> C $ V2 0 1 * V2 n n
-    'S' -> C $ V2 0 (-1) * V2 n n
-    'E' -> C $ V2 1 0 * V2 n n
-    'W' -> C $ V2 (-1) 0 * V2 n n
+    'N' -> C $ V2 0 1 ^* n
+    'S' -> C $ V2 0 (-1) ^* n
+    'E' -> C $ V2 1 0 ^* n
+    'W' -> C $ V2 (-1) 0 ^* n
     'L' -> T $ n `div` 90 `mod` 4
     'R' -> T $ (- n `div` 90) `mod` 4
     'F' -> F n
@@ -48,7 +49,7 @@ solve1 = foldl' f S{dir = V2 1 0, man = V2 0 0, count = 0}
     f s@S{..} = \case
       C v -> s{man = man + v, count = count + 1} -- & \x -> Debug.trace (show x) x
       T n -> s{dir = perpN n dir, count = count + 1} -- & \x -> Debug.trace (show x) x
-      F n -> s{man = man + dir * V2 n n, count = count + 1} -- & \x -> Debug.trace (show x) x
+      F n -> s{man = man + dir ^* n, count = count + 1} -- & \x -> Debug.trace (show x) x
 
 fpow :: (Eq t, Num t, Ord t) => (b -> b) -> t -> b -> b
 fpow _f 0 = id
@@ -73,7 +74,7 @@ solve2 = foldl' f S{dir = V2 0 0, man = V2 10 1, count = 0}
       -- rotate man instead
       T n -> s{man = perpN n man, count = count + 1} -- & \x -> Debug.trace (show x) x
       -- man and dir exchange places
-      F n -> s{dir = dir + man * V2 n n, count = count + 1} -- & \x -> Debug.trace (show x) x
+      F n -> s{dir = dir + man ^* n, count = count + 1} -- & \x -> Debug.trace (show x) x
 
 -- | Use dir instead of man.
 part2 :: [Move] -> Int
