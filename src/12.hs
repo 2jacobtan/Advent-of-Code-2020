@@ -1,7 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -11,12 +8,11 @@
 
 module Day12 where
 
-import Data.Function ((&))
+-- import Data.Function ((&))
 import Data.Functor ((<&>))
-import Control.Arrow ((>>>))
 import Linear.V2 (V2(V2), perp)
 import Data.List (foldl')
-import qualified Debug.Trace as Debug
+-- import qualified Debug.Trace as Debug
 
 main :: IO ()
 main = do
@@ -77,7 +73,7 @@ solve2 = foldl' f S{dir = V2 0 0, man = V2 10 1, count = 0}
       C v -> s{man = man + v, count = count + 1} -- & \x -> Debug.trace (show x) x
       -- rotate man instead
       T n -> s{man = perpN n man, count = count + 1} -- & \x -> Debug.trace (show x) x
-      -- 
+      -- man and dir exchange places
       F n -> s{dir = dir + man * V2 n n, count = count + 1} -- & \x -> Debug.trace (show x) x
 
 -- | Use dir instead of man.
