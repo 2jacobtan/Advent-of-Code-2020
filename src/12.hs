@@ -40,7 +40,7 @@ parseLine line@(move:(read @Int -> n)) =
     _ -> error $ "invalid line: " ++ line
 parseLine [] = error "empty line"
 
-data Ship = S {dir :: V2 Int, man :: V2 Int, count :: !Int} -- direction, manhattan distance
+data Ship = S {dir :: !(V2 Int), man :: !(V2 Int), count :: !Int} -- direction, manhattan distance
   deriving Show
 
 solve1 :: [Move] -> Ship
