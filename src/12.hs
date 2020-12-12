@@ -1,0 +1,62 @@
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
+
+module Day12 where
+
+import Data.Function ((&))
+import Data.Functor ((<&>))
+import Control.Arrow ((>>>))
+import Linear.V2 (V2(V2), perp)
+import Data.List (foldl')
+import qualified Debug.Trace as Debug
+
+main :: IO ()
+main = do
+  input <- readFile "12.txt" <&> lines <&> map parseLine
+  putStrLn "\n__Part 1"
+  print $ part1 input
+
+  putStrLn ""
+
+data Move = C (V2 Int) | T Int |  F Int -- Cardinal | Turn | Forward
+
+parseLine :: [Char] -> Move
+parseLine line@(move:(read @Int -> n)) =
+  case move of
+    'N' -> C $ V2 0 1 * V2 n n
+    'S' -> C $ V2 0 (-1) * V2 n n
+    'E' -> C $ V2 1 0 * V2 n n
+    'W' -> C $ V2 (-1) 0 * V2 n n
+    'L' -> T $ n `div` 90 `mod` 4
+    'R' -> T $ - n `div` 90 `mod` 4
+    'F' -> F n
+    _ -> error $ "invalid line: " ++ line
+parseLine [] = error "empty line"
+
+data Ship = S {dir :: V2 Int, man :: V2 Int, count :: Int} -- direction, manhattan distance
+  deriving Show
+
+solve1 :: [Move] -> Ship
+solve1 = foldl' f S{dir = V2 1 0, man = V2 0 0, count = 0}
+  where
+    f s@S{..} = \case
+      C v -> s{man = man + v, count = count + 1} & \x -> Debug.trace (show x) x
+      T n -> s{dir = perpN n dir, count = count + 1} & \x -> Debug.trace (show x) x
+      F n -> s{man = man + dir * V2 n n, count = count + 1} & \x -> Debug.trace (show x) x
+
+fpow :: (Eq t, Num t) => (b -> b) -> t -> b -> b
+fpow _f 0 = id
+fpow f n = f . fpow f (n-1)
+perpN :: Int -> V2 Int -> V2 Int
+perpN = fpow perp
+
+part1 :: [Move] -> Int
+part1 (solve1 -> S{man = V2 x y}) = x + y
