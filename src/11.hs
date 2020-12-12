@@ -100,9 +100,9 @@ solve2 (m,n) grid0 = go grid0
       map los indices
       where
         los (V2 i j) = mapMaybe (findLineOfSight (i,j)) deltas
-        deltas = delete (0,0) $ (,) <$> [0,1,-1] <*> [0,1,-1]
-        findLineOfSight (i,j) _delta@(di,dj) =
-          iterate (\(V2 x y) -> V2 (x+di) (y+dj)) (V2 i j)
+        deltas = delete (V2 0 0) $ V2 <$> [0,1,-1] <*> [0,1,-1]
+        findLineOfSight (i,j) delta =
+          iterate (+ delta) (V2 i j)
           & tail & findSeat
         findSeat =
           foldr (\ij r -> case grid0 ! ij of E -> Just ij; B -> Nothing; _ -> r)
