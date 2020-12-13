@@ -10,9 +10,8 @@ import Data.List (minimumBy)
 import Data.List.Split (splitOn)
 import Text.Read (readMaybe)
 import Data.Ord (comparing)
-import Control.Applicative (Applicative(liftA2))
 import Data.Function ((&))
-import qualified Debug.Trace as Debug
+-- import qualified Debug.Trace as Debug
 
 main :: IO ()
 main = do
@@ -33,15 +32,17 @@ main = do
   let time = waitTime departFrom busId - 1
   print $ busId * time
 
+  let solve2result_ = solve2result'
+    -- set which version of solve2result to use
   putStrLn "\n__Part 2"
   putStrLn "Sample: 67,7,59,61"
-  print $ solve2result . scheduleOffsets . map Just $ [67,7,59,61]
+  print $ solve2result_ . scheduleOffsets . map Just $ [67,7,59,61]
   putStrLn "Sample: 67,x,7,59,61"
-  print $ solve2result . scheduleOffsets $ [Just 67,Nothing,Just 7,Just 59,Just 61]
+  print $ solve2result_ . scheduleOffsets $ [Just 67,Nothing,Just 7,Just 59,Just 61]
   putStrLn "Sample: 67,7,x,59,61"
-  print $ solve2result . scheduleOffsets $ [Just 67,Just 7,Nothing,Just 59,Just 61]
+  print $ solve2result_ . scheduleOffsets $ [Just 67,Just 7,Nothing,Just 59,Just 61]
   putStrLn "Sample: 1789,37,47,1889"
-  print $ solve2result . scheduleOffsets . map Just $ [1789,37,47,1889]
+  print $ solve2result_ . scheduleOffsets . map Just $ [1789,37,47,1889]
 
   print $ scheduleOffsets schedules2
   -- print $ solve2result . scheduleOffsets $ schedules2
@@ -64,7 +65,7 @@ waitTime :: Integral a => a -> a -> a
 waitTime departFrom freq =
   freq - (departFrom - 1) `mod` freq
 
--- Part 2
+-- Part 2: version 1: works, but too slow
 
 -- Bus IDs must all be prime numbers for this to work.
 
@@ -85,8 +86,32 @@ solve2 n m ((freq, offset):xs) =
       | offset0 == offset = n'
       | otherwise =
           let
-            shortfall = (offset - offset0) `mod` offset
-            incr = undefined
+            shortfall = (offset - offset0) `mod` freq
+            mModFreq = m `mod` freq
+            incr = lcm shortfall mModFreq
+          in
+            findMatch (n' + m) -- & Debug.trace (show n')
+      where
+        offset0 = waitTime n' freq - 1
+
+-- Part 2: version 2
+
+solve2result' :: (Show p, Integral p) => [(p, p)] -> p
+solve2result' [] = 0
+solve2result' ((freq, _):xs) = solve2 0 freq xs
+
+solve2' :: (Show t, Integral t) => t -> t -> [(t, t)] -> t
+solve2' n _ [] = n
+solve2' n m ((freq, offset):xs) =
+  solve2 (findMatch n) (m*freq) xs -- & Debug.trace (show n)
+  where
+    findMatch n'
+      | offset0 == offset = n'
+      | otherwise =
+          let
+            shortfall = (offset - offset0) `mod` freq
+            mModFreq = m `mod` freq
+            incr = lcm shortfall mModFreq
           in
             findMatch (n' + m) -- & Debug.trace (show n')
       where
