@@ -49,23 +49,14 @@ solve :: (Foldable t, Integral a) => a -> t a -> a
 solve departFrom =
   minimumBy (comparing $ waitTime departFrom)
 
--- comparison :: Integral a => a -> a -> a -> Ordering
--- comparison departFrom x y =
---   if 
---     | f x > f y -> GT
---     | f x == f y -> EQ
---     | f x < f y -> LT
---     | otherwise -> undefined
---   where
---     f = waitTime departFrom
-
 waitTime :: Integral a => a -> a -> a
 waitTime departFrom freq =
   freq - (departFrom - 1) `mod` freq
+  --- ! to offset for zero wait time
 
--- Part 2: version 1: works, but too slow
+-- Part 2
 
--- Bus IDs must all be prime numbers for this to work.
+-- Bus IDs must be co-prime for the problem to be solvable and non-trivial.
 
 scheduleOffsets :: (Num t1, Enum t1) => [Maybe t2] -> [(t2, t1)]
 scheduleOffsets schedules =
@@ -85,6 +76,7 @@ solve2 n m ((freq, offset):xs) =
         --- *** offset needs to be in mod freq !!!
         ---       Because if offset > freq then the above condition
         ---       will never match LOL.
+        ---       Since offset0 is in mod freq.
       | otherwise = findMatch (n' + m) -- & Debug.trace (show n')
       where
         offset0 = waitTime n' freq - 1
