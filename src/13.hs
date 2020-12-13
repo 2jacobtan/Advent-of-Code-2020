@@ -80,3 +80,10 @@ solve2 n m ((freq, offset):xs) =
       | otherwise = findMatch (n' + m) -- & Debug.trace (show n')
       where
         offset0 = waitTime n' freq - 1
+
+-- Further explanation for Part 2:
+{-
+BusIDs were all prime, so one must simply add a multiple of the product of the previous BusIDs to maintain the same remainder mod all the previous BusIDs, such that the sum has a correct remainder mod the current BusID.
+
+https://en.wikipedia.org/wiki/Chinese_remainder_theorem#Search_by_sieving
+-}
