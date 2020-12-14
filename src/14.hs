@@ -1,7 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -12,15 +9,14 @@
 
 import Data.Function ((&))
 import Data.Functor ((<&>))
--- import Control.Arrow ((>>>))
 import Text.Read (readMaybe)
 import Data.Foldable (Foldable(foldl'))
-import Data.Bits
+import Data.Bits ( Bits(zeroBits, (.&.), (.|.), setBit, clearBit) )
 import Data.Word (Word64)
 import Control.Exception (assert)
 import Data.Map(Map)
 import qualified Data.Map as Map
-import qualified Debug.Trace as Debug
+-- import qualified Debug.Trace as Debug
 import Numeric (showIntAtBase)
 import Data.Char (intToDigit)
 
