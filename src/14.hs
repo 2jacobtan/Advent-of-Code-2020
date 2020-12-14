@@ -81,34 +81,42 @@ part1 (runProg -> PS{..}) = sum memory
 
 -- Part 2
 
-parseLine2 :: [String] -> Instruction
+data Instruction' = IMask' Mask' | IMem' Mem
+data Mask' = Mask' {m1' :: !Word64, mx :: [Int]}
+
+parseLine2 :: [String] -> Instruction'
 parseLine2 [left, _, right] =
   case left -- & (\x -> Debug.trace (show x) x)
   of
     "mask" ->
       let
-        f m@Mask{..} (i,x) = case readMaybe @Int [x] of
-          Just 1 -> m{m1 = setBit m1 i}
-          Just 0 -> m{m0 = clearBit m0 i}
-          Nothing -> m
-          _ -> error "invalid mask"
+        f m@Mask'{..} (i,x) = case x of
+          '1' -> m{m1' = setBit m1' i}
+          'X' -> m{mx = i:mx} -- collect indices of 'x' mask
+          '0' -> m
+          invalidMask -> error $ "invalid mask: " ++ show invalidMask
       in
-        IMask $ foldl' f Mask{m1 = zeroBits, m0 = maxBound} (right & reverse & zip [0..])
+        IMask' $ foldl' f Mask'{m1' = zeroBits, mx = []} (right & reverse & zip [0..])
     _ ->
       let (mem,
             tail -> init -> read @Word64 -> loc) = splitAt 3 left
       in assert (mem == "mem") $
-        IMem $ Mem {loc = loc, val = read @Word64 right}
+        IMem' $ Mem {loc = loc, val = read @Word64 right}
 parseLine2 xs = error $ "invalid line length: " ++ show (length xs)
 
-runProg2 :: Foldable t => t Instruction -> ProgState
-runProg2 = foldl' f (PS (Mask zeroBits zeroBits) Map.empty)
-  where
-    f ps@PS{mask=Mask{..},..} = \case
-      IMask ma -> ps{mask = ma} -- & Debug.trace (show ma)
-      IMem Mem{..} ->
-        let result = val .&. m0 .|. m1 -- .&. infixl7, .|. infixl5
-        in ps{memory = Map.insert loc result memory }
+data ProgState' = PS' {mask' :: Mask', memory' :: Map Word64 Word64}
 
-part2 :: Foldable t => t Instruction -> Word64
-part2 (runProg2 -> PS{..}) = sum memory
+runProg2 :: Foldable t => t Instruction' -> ProgState'
+runProg2 = foldl' f (PS' (Mask' zeroBits []) Map.empty)
+  where
+    f ps@PS'{mask'=Mask'{..},..} = \case
+      IMask' ma -> ps{mask' = ma} -- & Debug.trace (show ma)
+      IMem' Mem{..} ->
+        let locM1 = loc .|. m1'
+            locM1Mx = foldl' g [locM1] mx
+              where g ls i = [ h l i | h <- [setBit, clearBit], l <- ls]
+            locM1MxVal = Map.fromList [(k,val) | k <- locM1Mx]
+        in ps{memory' = Map.union locM1MxVal memory' }
+
+part2 :: Foldable t => t Instruction' -> Word64
+part2 (runProg2 -> PS'{..}) = sum memory'
