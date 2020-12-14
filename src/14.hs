@@ -1,3 +1,8 @@
+-- In future probably should just use Megaparsec instead of the hack job of a parse via string manipulation.
+
+-- Also should break the program down into smaller parts, instead of doing too many things in one function.
+
+
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
