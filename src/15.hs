@@ -46,9 +46,6 @@ main = do
 
 -- Part 2
 
--- part2 = (!! (30000000 - 1)) spoken
---- ^ takes > one hour and a few gigs of RAM lol
-
 solve2 :: Int -> ST s Int
 solve2 (subtract 1 -> n) = do
   vec :: V.MVector s Int32 <- V.new n
