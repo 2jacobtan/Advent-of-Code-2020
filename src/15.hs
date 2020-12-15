@@ -61,6 +61,7 @@ solve2 (subtract 1 -> n) = do
               j -> i - j
         V.write vec x i
         return next   & (if mod i 1000000 == 0 then Debug.trace (show (i,x)) else id)
+  
   foldM f (fromIntegral $ last input) [(fromIntegral $ length input)..(fromIntegral n)]
 
 part2 :: Int -> Int
