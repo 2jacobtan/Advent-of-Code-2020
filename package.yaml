@@ -31,6 +31,8 @@ dependencies:
 - criterion
 - linear
 - vector
+- strict-tuple
+- monad-loops
 
 library:
   source-dirs: src
@@ -40,9 +42,9 @@ executables:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
-    # - -threaded
-    # - -rtsopts
-    # - -with-rtsopts=-N
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
     - -O2
     dependencies:
     - AdventOfCode2020

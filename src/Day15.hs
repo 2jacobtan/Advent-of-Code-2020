@@ -1,20 +1,25 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
 
-module Main where
+module Day15 where
 
 import Data.Function ((&))
 
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as Map
+import Data.Tuple.Strict (T2(..), sfst, ssnd)
 import qualified Data.Vector.Unboxed.Mutable as V
 import qualified Debug.Trace as Debug
 import Data.Int (Int32)
+import Control.Monad.Loops (whileM_)
 import Control.Monad.ST (runST, ST)
-import Control.Monad (foldM)
 import Criterion.Main (whnf, bench, defaultMain)
+import Control.Monad.Trans.State.Strict (gets, StateT(..), evalStateT)
+import Data.Foldable (for_)
+import Data.Functor ((<&>))
 
 input = [8,0,17,4,1,12]
 
@@ -39,12 +44,12 @@ main = do
   -- print $ map part1 [125..150]
   -- print $ map part2 [125..150]
 
-  -- print $ map part1 [2010..2019]
-  -- print $ map part2 [2010..2019]
+  -- print $ map part1 [2010..2020]
+  -- print $ map part2 [2010..2020]
 
   -- print $ part1 (3*10^7) -- a bit slow (2 minutes) because Map
   
-  print $ part2 (3*10^7) -- fast (2 seconds) because Vector (Array)
+  print $ part2 (3*10^7) -- fast (<2 seconds) because Vector (Array) and StateT instead of foldM over a list
 
   defaultMain
     [
@@ -53,24 +58,30 @@ main = do
 
 -- Part 2
 
-solve2 :: Int -> ST s Int
-solve2 (subtract 1 -> n) = do
+-- | Added StateT method instead of my foldM method, copying Justin Le's code:
+--   https://github.com/mstksg/advent-of-code-2020/blob/master/src/AOC/Challenge/Day15.hs
+
+solve2 :: Int -> StateT (T2 Int Int32) (ST s) Int
+solve2 n = do
   vec :: V.MVector s Int32 <- V.new n
 
   -- populate vec with starting numbers
-  mapM_ (\(x,i) -> V.write vec x (fromIntegral i)) $ zip input [1..]
+  for_ input $ \y -> StateT $ \(T2 _ i) -> V.write vec y (i+1) <&> (, T2 y (i+1))
   
   let
-    f :: Int -> Int32 -> ST s Int
-    f x i = do
+    f :: T2 Int Int32 -> ST s ((), T2 Int Int32)
+    f (T2 x i) = do
         j <- V.read vec x
         let next = fromIntegral $ case j of
               0 -> 0
               j -> i - j
         V.write vec x i
-        return next  -- & (if mod i 1000000 == 0 then Debug.trace (show (i,x)) else id)
+        return ((),T2 next (i+1))  -- & (if mod i 1000000 == 0 then Debug.trace (show (i,x)) else id)
   
-  foldM f (fromIntegral $ last input) [(fromIntegral $ length input)..(fromIntegral n)]
+  whileM_ (gets ((< n32) . ssnd)) $ StateT f
+  gets sfst
+  where
+    n32 :: Int32 = fromIntegral n
 
 part2 :: Int -> Int
-part2 n = runST $ solve2 n
+part2 n = runST $ flip evalStateT (T2 0 0 :: T2 Int Int32) $ solve2 n

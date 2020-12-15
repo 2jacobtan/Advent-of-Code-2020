@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 14afd80c8a8373bf56a8280d6d15e11a37d6e8af7a87c785c5bba84cb075e62b
+-- hash: 634f936a1962ca4bfd52dd1c434449a158d810e6462c6558a01397d74aeb0e87
 
 name:           AdventOfCode2020
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Day11
+      Day15
       Lib
   other-modules:
       Paths_AdventOfCode2020
@@ -40,8 +41,10 @@ library
     , criterion
     , linear
     , megaparsec
+    , monad-loops
     , pretty-simple
     , split
+    , strict-tuple
     , text
     , transformers
     , vector
@@ -53,7 +56,7 @@ executable AdventOfCode2020-exe
       Paths_AdventOfCode2020
   hs-source-dirs:
       app
-  ghc-options: -O2
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       AdventOfCode2020
     , array
@@ -62,8 +65,10 @@ executable AdventOfCode2020-exe
     , criterion
     , linear
     , megaparsec
+    , monad-loops
     , pretty-simple
     , split
+    , strict-tuple
     , text
     , transformers
     , vector
@@ -85,8 +90,10 @@ test-suite AdventOfCode2020-test
     , criterion
     , linear
     , megaparsec
+    , monad-loops
     , pretty-simple
     , split
+    , strict-tuple
     , text
     , transformers
     , vector
