@@ -1,5 +1,4 @@
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
@@ -57,7 +56,7 @@ solve2 (subtract 1 -> n) = do
     f :: Int -> Int32 -> ST s Int
     f x i = do
         j <- V.read vec x
-        let next = fromIntegral case j of
+        let next = fromIntegral $ case j of
               0 -> 0
               j -> i - j
         V.write vec x i
