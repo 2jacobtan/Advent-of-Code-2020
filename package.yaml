@@ -30,6 +30,7 @@ dependencies:
 - array
 - criterion
 - linear
+- vector
 
 library:
   source-dirs: src
