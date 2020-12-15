@@ -13,7 +13,7 @@ import qualified Data.Vector.Unboxed.Mutable as V
 import qualified Debug.Trace as Debug
 import Data.Int (Int32)
 import Control.Monad.ST (runST, ST)
-import Control.Monad (foldM)
+-- import Control.Monad (foldM)
 import Criterion.Main (whnf, bench, defaultMain)
 
 input = [8,0,17,4,1,12]
@@ -44,7 +44,7 @@ main = do
 
   -- print $ part1 (3*10^7) -- a bit slow (2 minutes) because Map
   
-  print $ part2 (3*10^7) -- fast (2 seconds) because Vector (Array)
+  print $ part2 (3*10^7) -- fast (<2 seconds) because Vector (Array)
 
   defaultMain
     [
@@ -70,7 +70,20 @@ solve2 (subtract 1 -> n) = do
         V.write vec x i
         return next  -- & (if mod i 1000000 == 0 then Debug.trace (show (i,x)) else id)
   
-  foldM f (fromIntegral $ last input) [(fromIntegral $ length input)..(fromIntegral n)]
+  -- foldM f (fromIntegral $ last input) [(fromIntegral $ length input)..(fromIntegral n)]
+  --- ^ slowest
+
+  let
+    go num ind
+      | ind > n32 = num
+      | otherwise =
+          num >>= \num' -> go (f num' ind) (ind + 1)
+  
+  go (return $ fromIntegral $ last input) (fromIntegral $ length input)
+  --- ^ faster (see Day15.hs for fastest implementation with StateT)
+  
+  where
+    n32 :: Int32 = fromIntegral n
 
 part2 :: Int -> Int
 part2 n = runST $ solve2 n
