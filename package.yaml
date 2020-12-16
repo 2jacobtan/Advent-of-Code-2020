@@ -33,6 +33,7 @@ dependencies:
 - vector
 - strict-tuple
 - monad-loops
+- ilist
 
 library:
   source-dirs: src
