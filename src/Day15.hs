@@ -17,7 +17,7 @@ import Data.Int (Int32)
 import Control.Monad.Loops (whileM_)
 import Control.Monad.ST (runST, ST)
 import Criterion.Main (whnf, bench, defaultMain)
-import Control.Monad.Trans.State.Strict (gets, StateT(..), evalStateT)
+import Control.Monad.Trans.State.Strict (put, get, gets, StateT(..), evalStateT)
 import Data.Foldable (for_)
 import Data.Functor ((<&>))
 
@@ -68,20 +68,22 @@ solve2 n = do
   -- populate vec with starting numbers
   for_ input $ \y -> StateT $ \(T2 _ i) -> V.write vec y (i+1) <&> (, T2 y (i+1))
   
-  let
-    f :: T2 Int Int32 -> ST s ((), T2 Int Int32)
-    f (T2 x i) = do
-        j <- V.read vec x
-        let next = fromIntegral $ case j of
-              0 -> 0
-              j -> i - j
-        V.write vec x i
-        return ((),T2 next (i+1))  -- & (if mod i 1000000 == 0 then Debug.trace (show (i,x)) else id)
-  
-  whileM_ (gets ((< n32) . ssnd)) $ StateT f
+  whileM_ (gets ((< n32) . ssnd)) $ f vec
   gets sfst
   where
     n32 :: Int32 = fromIntegral n
+{-# INLINE solve2 #-}
+
+f :: V.MVector s Int32 -> StateT (T2 Int Int32) (ST s) ()
+f vec = do
+    (T2 x i) <- get
+    j <- V.read vec x
+    let next = fromIntegral $ case j of
+          0 -> 0
+          j -> i - j
+    V.write vec x i
+    put $ T2 next (i+1)  -- & (if mod i 1000000 == 0 then Debug.trace (show (i,x)) else id)
+{-# INLINE f #-}
 
 part2 :: Int -> Int
 part2 n = runST $ flip evalStateT (T2 0 0 :: T2 Int Int32) $ solve2 n
