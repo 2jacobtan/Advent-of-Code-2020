@@ -12,6 +12,7 @@ import Control.Monad.Trans.State.Strict (State, execState, put, get)
 import Linear.V3 (V3(..))
 import Linear.V4 (V4(..))
 import Control.Monad (replicateM_)
+import Criterion.Main (defaultMain, bench, whnf)
 
 type Point = V3 Int
 
@@ -24,6 +25,11 @@ main = do
   putStrLn "\n__Part 2"
   input2 <- readFile "17.txt" <&> lines <&> parseInput2
   print $ part2 input2
+
+  defaultMain
+    [
+      bench "Day17 part2" $ whnf part2 input2
+    ]   
 
 parseInput :: [[Char]] -> Set Point
 parseInput xss = execState state S.empty
