@@ -5,7 +5,7 @@
 import Data.Foldable (Foldable(foldl'))
 import Data.Function ((&))
 import Data.Functor ((<&>))
-import Data.List.Index (imapM)
+import Data.List.Index (imapM_)
 import Data.Set (Set)
 import qualified Data.Set as S
 import Control.Monad.Trans.State.Strict (State, execState, put, get)
@@ -28,9 +28,10 @@ main = do
 parseInput :: [[Char]] -> Set Point
 parseInput xss = execState state S.empty
   where
+    state :: State (Set (V3 Int)) ()
     state = xss
-      & imapM (\i xs -> xs
-        & imapM (\j x -> do
+      & imapM_ (\i xs -> xs
+        & imapM_ (\j x -> do
           case x of
             '#' -> do
               world <- get
@@ -58,11 +59,11 @@ nextState = next
             n' = neighbours x
             activeNeibCount = S.size (S.intersection n' s0)
             ns' = ns <> n'
-      -- first S.empty collects points to be turned on
-      -- second S.empty collects neighbours
       let
         -- handle active cubes first
         (s1,ns1) = s0 & foldl' f (S.empty, S.empty)
+          -- first S.empty collects points to be turned on
+          -- second S.empty collects neighbours
         -- handle inacitve cubes
         inactives = ns1 S.\\ s0
         g s x = if activeNeibCount == 3 then S.insert x s else s
@@ -85,9 +86,10 @@ type Point4 = V4 Int
 parseInput2 :: [[Char]] -> Set Point4
 parseInput2 xss = execState state S.empty
   where
+    state :: State (Set (V4 Int)) ()
     state = xss
-      & imapM (\i xs -> xs
-        & imapM (\j x -> do
+      & imapM_ (\i xs -> xs
+        & imapM_ (\j x -> do
           case x of
             '#' -> do
               world <- get
@@ -115,11 +117,11 @@ nextState2 = next
             n' = neighbours2 x
             activeNeibCount = S.size (S.intersection n' s0)
             ns' = ns <> n'
-      -- first S.empty collects points to be turned on
-      -- second S.empty collects neighbours
       let
         -- handle active cubes first
         (s1,ns1) = s0 & foldl' f (S.empty, S.empty)
+          -- first S.empty collects points to be turned on
+          -- second S.empty collects neighbours
         -- handle inacitve cubes
         inactives = ns1 S.\\ s0
         g s x = if activeNeibCount == 3 then S.insert x s else s
