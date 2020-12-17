@@ -59,10 +59,10 @@ nextState = next
       let
         f (s,ns) x = if activeNeibCount `elem` [2,3]
           then (S.insert x s, ns') else (s, ns')
-            where
-              n' = neighbours x
-              activeNeibCount = S.size (S.intersection n' s0)
-              ns' = ns <> n'
+          where
+            n' = neighbours x
+            activeNeibCount = S.size (S.intersection n' s0)
+            ns' = ns <> n'
       -- first S.empty collects points to be turned on
       -- second S.empty collects neighbours
       let
