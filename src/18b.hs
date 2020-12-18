@@ -1,5 +1,4 @@
--- Part 2
--- abandoned failed attempt
+-- Part 1
 
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -11,74 +10,62 @@ import Data.Foldable (Foldable(foldl'))
 import Data.Function ((&))
 import Data.Functor ((<&>))
 import Control.Arrow ((>>>))
-import Text.Megaparsec (runParser, parseMaybe, parseTest, between, try, Parsec)
+import Text.Megaparsec (parseMaybe, parseTest, between, try, Parsec)
 import Text.Megaparsec.Char (space)
 import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Text (pack, Text)
 import Data.Void (Void)
 import Control.Applicative (Alternative(many, (<|>)))
 import Data.Maybe (fromMaybe)
-import Control.Monad (void)
+import Debug.Trace (trace)
 
 main :: IO ()
 main = do
   input <- readFile "18.txt" <&> lines
-  let s1 = "2 * 3 + (4 * 5)"
-  parseTest exprP (pack s1)
-  print $ evalParse exprP s1
-  let s1 = "5 + (8 * 3 + 9 + 3 * 4 * 3)"
-  parseTest exprP (pack s1)
-  print $ runParser exprP "" (pack s1)
-  print $ evalParse exprP s1
-
-  -- putStrLn "\n__head test"
-  -- parseTest exprP (pack $ head input)
-  -- print $ evalParse exprP (head input)
-  -- print $ part2 input
+  print $ evalParse exprP "2 * 3 + (4 * 5)"
+  parseTest exprP "5 + (8 * 3 + 9 + 3 * 4 * 3)"
+  print $ evalParse exprP "5 + (8 * 3 + 9 + 3 * 4 * 3)"
+  parseTest exprP "8 * 3 + 9 + 3 * 4 * 3"
+  print $ evalParse exprP "8 * 3 + 9 + 3 * 4 * 3"
+  print $ evalParse exprP "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"
+  print $ evalParse exprP "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"
+  
+  putStrLn "__Part 2 answer"
+  print $ part1 input
 
 type Parser = Parsec Void Text
 
-evalParse :: Parser Expr -> String -> Int
+evalParse :: Parser Expr -> String -> Integer
 evalParse p = eval . fromMaybe (error "failParse") . parseMaybe p . pack
 
+data Expr = Expr UnitExpr [SubExpr]
+  deriving Show
+
 data UnitExpr
-  = Num Int
+  = Num Integer
   | Paren Expr
   deriving Show
 
-data Expr
-  = Expr UnitExpr [SubExpr]
-  | ExprExpr2 Expr2
-  deriving Show
-
-newtype SubExpr
-  = Mul Expr2
-  deriving Show
-
-data Expr2 = Expr2 UnitExpr [SubExpr2]
-  deriving Show
-
-newtype SubExpr2
+data SubExpr
   = Add UnitExpr
+  | Mul UnitExpr
   deriving Show
 
-evalUnit :: UnitExpr -> Int
+evalUnit :: UnitExpr -> Integer
 evalUnit = \case
   Num x -> x
   Paren e -> eval e
 
-eval :: Expr -> Int
-eval (Expr head tail) = foldl' f (evalUnit head) tail
+eval :: Expr -> Integer
+eval (Expr head tail) = go (evalUnit head) tail
   where
-    f l = \case
-      Mul x -> l * eval2 x
-eval (ExprExpr2 e) = eval2 e
+    go :: Integer -> [SubExpr] -> Integer
+    go x [] = x
+    go x (y_:ys) = case y_ of
+      Add y -> go (x + evalUnit y) ys
+      Mul y -> x * go (evalUnit y) ys
 
-eval2 :: Expr2 -> Int
-eval2 (Expr2 head tail) = foldl' f (evalUnit head) tail
-  where
-    f l = \case
-      Add x -> l + evalUnit x
+aoeu = "(8 * 3 + 9 + 3 * 4 * 3)"
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme space
@@ -98,24 +85,17 @@ parenExprP = Paren <$> parens exprP
 unitP :: Parser UnitExpr
 unitP = numP <|> parenExprP
 
-addP :: Parser SubExpr2
+addP :: Parser SubExpr
 addP = Add <$ symbol "+" <*> unitP
 
 mulP :: Parser SubExpr
-mulP = Mul <$ symbol "*" <*> expr2P
+mulP = Mul <$ symbol "*" <*> unitP
 
 subExprP :: Parser SubExpr
-subExprP = mulP
+subExprP = addP <|> mulP
 
 exprP :: Parser Expr
-exprP = try (Expr <$> unitP <*> many subExprP)
-  <|> ExprExpr2 <$> expr2P
+exprP = Expr <$> unitP <*> many subExprP
 
-subExpr2P :: Parser SubExpr2
-subExpr2P = addP
-
-expr2P :: Parser Expr2
-expr2P = Expr2 <$> unitP <*> many subExpr2P
-
-part2 :: [String] -> Int
-part2 = sum . map (evalParse exprP)
+part1 :: [String] -> Integer
+part1 = sum . map (evalParse exprP)
