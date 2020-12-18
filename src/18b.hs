@@ -1,4 +1,6 @@
--- Part 1
+-- Part 2
+-- Copy-paste from Part 1,
+--   with small modification to eval function.
 
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -62,10 +64,8 @@ eval (Expr head tail) = go (evalUnit head) tail
     go :: Integer -> [SubExpr] -> Integer
     go x [] = x
     go x (y_:ys) = case y_ of
-      Add y -> go (x + evalUnit y) ys
-      Mul y -> x * go (evalUnit y) ys
-
-aoeu = "(8 * 3 + 9 + 3 * 4 * 3)"
+      Add y -> go (x + evalUnit y) ys  -- prioritise addition
+      Mul y -> x * go (evalUnit y) ys  -- deprioritise multiplication
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme space
