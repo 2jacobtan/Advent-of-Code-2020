@@ -22,15 +22,24 @@ import Text.Megaparsec.Char (eol, hspace, letterChar, string)
 import Data.Maybe (fromMaybe)
 import qualified Data.IntMap as M
 import Data.IntMap (IntMap)
+import qualified Data.Set as S
+import Data.List.Extra (sumOn')
 
 main = do
   -- inputRaw <- readFile "19.txt"
   -- parseTest inputP inputRaw
-  input <- readFile "19.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
+  (rules, messages) <- readFile "19.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
   
-  (rules, _) <- readFile "19sample.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
+  (rulesSample, _) <- readFile "19sample.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
 
-  print $ mkRule [[0]] . mkRuleMap $ rules
+  print $ mkRule [[0]] . mkRuleMap $ rulesSample
+
+  putStrLn "\n__Part 1"
+  -- mapM_ print rules
+  -- print $ mkRule [[0]] . mkRuleMap $ rules
+  print $ part1 rules messages
+
+
 -- Parsing 
 
 type Parser = Parsec Void String
@@ -74,26 +83,29 @@ mkRule iss ruleMap = go iss
           Val c -> map (c:) (f xs)
         f [] = [[]]
 
--- mkRule :: [[Int]] -> IntMap Rule -> [String]
--- mkRule iss ruleMap = go2 $ go iss
---   where
---     go :: [[Int]] -> [[Int]]
---     go xss = do
---       xs <- xss  -- each possible candidate
---       foldr f [] xs
---       where
---         f x r =
---           let
---             yss = case ruleMap M.! x of
---               Ref yss' -> go yss'
---               Val _ -> [[x]]
---           in do
---               ys <- yss
---               return ys ++ r
-            
---     go2 :: [[Int]] -> [String]
---     go2 xss = map (map f) xss
---       where
---         f x = case ruleMap M.! x of
---           Val c -> c
---           Ref _ -> error "unexpected ref"
+solve1 :: Num b => [(Int, Rule)] -> [String] -> b
+solve1 rules messages = messages
+  & sumOn' (\x -> if S.member x validMessages then 1 else 0)
+  where 
+    validMessages = rules
+      & mkRule [[0]] . mkRuleMap
+      & S.fromList
+{- HLINT ignore "Eta reduce" -}
+
+part1 :: Num b => [(Int, Rule)] -> [String] -> b
+part1 = solve1
+
+
+-- Part 2
+
+solve2 :: Num b => [(Int, Rule)] -> [String] -> b
+solve2 rules messages = messages
+  & sumOn' (\x -> if S.member x validMessages then 1 else 0)
+  where 
+    validMessages = rules
+      & mkRuleMap
+      & M.insert 8 (Ref [[42],[42,8]])
+      & M.insert 11 (Ref [[42,31],[42,11,31]])
+      & mkRule [[0]] 
+      & S.fromList
+{- HLINT ignore "Eta reduce" -}
