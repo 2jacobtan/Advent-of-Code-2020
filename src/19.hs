@@ -63,28 +63,16 @@ mkRuleMap :: [(Int, Rule)] -> IntMap Rule
 mkRuleMap = M.fromList
 
 mkRule :: [[Int]] -> IntMap Rule -> [String]
-mkRule iss ruleMap = go2 $ go iss
+mkRule iss ruleMap = go iss
   where
-    go :: [[Int]] -> [[Int]]
-    go xss = do
-      xs <- xss  -- each possible candidate
-      foldr f [] xs
+    go :: [[Int]] -> [[Char]]
+    go xss = concatMap f xss
       where
-        f x r =
-          let
-            yss = case ruleMap M.! x of
-              Ref yss' -> go yss'
-              Val _ -> [[x]]
-          in do
-              ys <- yss
-              return ys ++ r
-            
-    go2 :: [[Int]] -> [String]
-    go2 xss = map (map f) xss
-      where
-        f x = case ruleMap M.! x of
-          Val c -> c
-          Ref _ -> error "unexpected ref"
+        f :: [Int] -> [[Char]]
+        f (x:xs) = case ruleMap M.! x of
+          Ref yss -> go $ map (++ xs) yss
+          Val c -> map (c:) (f xs)
+        f [] = [[]]
 
 -- mkRule :: [[Int]] -> IntMap Rule -> [String]
 -- mkRule iss ruleMap = go2 $ go iss
