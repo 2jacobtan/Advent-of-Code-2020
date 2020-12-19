@@ -20,12 +20,18 @@ import Data.Text (Text)
 import Text.Megaparsec.Char.Lexer (lexeme, decimal)
 import Text.Megaparsec.Char (eol, hspace, letterChar, string)
 import Data.Maybe (fromMaybe)
+import qualified Data.IntMap as M
+import Data.IntMap (IntMap)
 
 main = do
-  inputRaw <- readFile "19.txt"
-  parseTest inputP inputRaw
-  -- input <- readFile "20.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
-  -- print input
+  -- inputRaw <- readFile "19.txt"
+  -- parseTest inputP inputRaw
+  input <- readFile "19.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
+  
+  (rules, _) <- readFile "19sample.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
+
+  print $ mkRule [[0]] . mkRuleMap $ rules
+-- Parsing 
 
 type Parser = Parsec Void String
 
@@ -50,3 +56,56 @@ ruleP = do
 numP :: Parser Int
 numP = lexeme hspace decimal
 
+
+-- Part 1
+
+mkRuleMap :: [(Int, Rule)] -> IntMap Rule
+mkRuleMap = M.fromList
+
+mkRule :: [[Int]] -> IntMap Rule -> [String]
+mkRule iss ruleMap = go2 $ go iss
+  where
+    go :: [[Int]] -> [[Int]]
+    go xss = do
+      xs <- xss  -- each possible candidate
+      foldr f [] xs
+      where
+        f x r =
+          let
+            yss = case ruleMap M.! x of
+              Ref yss' -> go yss'
+              Val _ -> [[x]]
+          in do
+              ys <- yss
+              return ys ++ r
+            
+    go2 :: [[Int]] -> [String]
+    go2 xss = map (map f) xss
+      where
+        f x = case ruleMap M.! x of
+          Val c -> c
+          Ref _ -> error "unexpected ref"
+
+-- mkRule :: [[Int]] -> IntMap Rule -> [String]
+-- mkRule iss ruleMap = go2 $ go iss
+--   where
+--     go :: [[Int]] -> [[Int]]
+--     go xss = do
+--       xs <- xss  -- each possible candidate
+--       foldr f [] xs
+--       where
+--         f x r =
+--           let
+--             yss = case ruleMap M.! x of
+--               Ref yss' -> go yss'
+--               Val _ -> [[x]]
+--           in do
+--               ys <- yss
+--               return ys ++ r
+            
+--     go2 :: [[Int]] -> [String]
+--     go2 xss = map (map f) xss
+--       where
+--         f x = case ruleMap M.! x of
+--           Val c -> c
+--           Ref _ -> error "unexpected ref"
