@@ -45,6 +45,8 @@ main = do
   putStrLn "\n__Part 2"
   let inputMap = M.fromList $ fromMaybe (error "failParse") input
   -- print $ topLeft <$> inputMap -- == 2207
+  putStrLn $ solve2alignment inputMap  -- check alignment
+
   seaMonster <- readFile "20b.txt" <&> lines <&> map (map (=='#'))
   print ""
   
@@ -202,7 +204,7 @@ makeTopRow tilesMap topLeftTileId = (tileToList topLeftTile, topLeftTileId) : re
     f (_,n,_) | n == 0 = Nothing
     f (tile0, n, id0) =
       Just ((oriented1, id1), (oriented1Arr, n-1, id1))
-      & trace ("\n" ++ show dir1)
+      -- & trace ("\n" ++ show dir1)
       where
         ((dir1,noFlip),(id1,arr1)) = fromMaybe (error "no match") $ matchTbyArr tilesMap tile0 id0 edgeE
         oriented1 = orient E arr1 dir1 & (if noFlip then id else reverse)
@@ -224,16 +226,16 @@ makeColumn tilesMap (topTile, topTileId) =
         oriented1 = orient S arr1 dir1 & (if noFlip then id else map reverse)
         oriented1Arr = listArray ((0,0),(9,9)) (concat oriented1)    
 
--- -- This shows that the tiles are all correctly aligned!
--- solve2 :: Map ID Tile -> String
--- solve2 tilesMap = makeTopRow tilesMap 2207
---   & map (makeColumn tilesMap) & map (map fst)
---   & map (map Mat.fromLists)
---   -- & map (map (Mat.submatrix 2 9 2 9))
---   & map (foldl1' (Mat.<->)) & foldl1' (Mat.<|>)
---   & Mat.mapPos (\_ x -> if x then '#' else '.')
---   & Mat.submatrix 1 30 1 30
---   & Mat.prettyMatrix
+-- This shows that the tiles are all correctly aligned!
+solve2alignment :: Map ID Tile -> String
+solve2alignment tilesMap = makeTopRow tilesMap 2207
+  & map (makeColumn tilesMap) & map (map fst)
+  & map (map Mat.fromLists)
+  -- & map (map (Mat.submatrix 2 9 2 9))
+  & map (foldl1' (Mat.<->)) & foldl1' (Mat.<|>)
+  & Mat.mapPos (\_ x -> if x then '#' else '.')
+  & Mat.submatrix 1 30 1 30
+  & Mat.prettyMatrix
 
 solve2 :: Map ID Tile -> Mat.Matrix Bool
 solve2 tilesMap = makeTopRow tilesMap 2207
@@ -247,10 +249,12 @@ solve2 tilesMap = makeTopRow tilesMap 2207
 
 seaMonsters seaMon = [
   seaMon,
-  reverse seaMon
+  reverse seaMon -- flip
   ] >>= \x -> [
     x,
-    reverse . transpose $ x,
+    reverse . transpose $ x, -- rotations
     transpose . reverse $ x,
     reverse . map reverse $ x
   ]
+
+findSeaMons mat sea = undefined
