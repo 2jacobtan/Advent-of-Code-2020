@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c51e65a79e7b48f992158c8d3081c12793e1cc4b7262f76fed43ec1b8ef7d902
+-- hash: a95b3a245d224d8b1b70216b74725f4facbda5c1c7dda366e45e92cb36184a08
 
 name:           AdventOfCode2020
 version:        0.1.0.0
@@ -42,6 +42,7 @@ library
     , extra
     , ilist
     , linear
+    , matrix
     , megaparsec >=9.0.0
     , monad-loops
     , pretty-simple
@@ -68,6 +69,7 @@ executable AdventOfCode2020-exe
     , extra
     , ilist
     , linear
+    , matrix
     , megaparsec >=9.0.0
     , monad-loops
     , pretty-simple
@@ -95,6 +97,7 @@ test-suite AdventOfCode2020-test
     , extra
     , ilist
     , linear
+    , matrix
     , megaparsec >=9.0.0
     , monad-loops
     , pretty-simple

@@ -24,6 +24,13 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.Maybe (mapMaybe, fromMaybe)
 import Data.Map (Map)
+import Data.List (foldl1', unfoldr, transpose)
+import Control.Monad (replicateM_)
+import Data.List.Split (chunksOf)
+import Debug.Trace (trace)
+import Data.Bits (Bits(xor))
+import qualified Data.Matrix as Mat
+import Prelude hiding (GHC.Show.Bool)
 
 main :: IO ()
 main = do
@@ -34,8 +41,13 @@ main = do
   putStrLn "\n__Part 1"
   print $ length <$> input
   print $ part1 <$> input
-  let inputMap = M.fromList <$> input
-  print $ topLeft <$> inputMap
+  
+  putStrLn "\n__Part 2"
+  let inputMap = M.fromList $ fromMaybe (error "failParse") input
+  -- print $ topLeft <$> inputMap -- == 2207
+  seaMonster <- readFile "20b.txt" <&> lines <&> map (map (=='#'))
+  print ""
+  
 
 type Parser = Parsec Void String
 type IdArray = (Int, Tile)
@@ -118,8 +130,9 @@ getEdge :: Tile -> EdgeIx -> Edge
 getEdge arr edge = (arr !) <$> edge
 
 -- corners (from Part 1): [1693,2111,2207,2339]
-topLeft tiles = [1693,2111,2207,2339]
-  & mapMaybe (\x -> (matchT tiles x edgeE *> matchT tiles x edgeS) <&> (,x))
+topLeft :: Map ID Tile -> [(((Dir,Bool), IdArray), ID)]
+topLeft tilesMap = [1693,2111,2207,2339]
+  & mapMaybe (\x -> (matchT tilesMap x edgeE *> matchT tilesMap x edgeS) <&> (,x))
 
 tileToList :: Tile -> [[Bool]]
 tileToList tile = elems tile & chunksOf 10
@@ -135,20 +148,109 @@ orient S arr = \case
   S -> tileToList arr & reverse & map reverse -- 180
   E -> tileToList arr & transpose & reverse -- counter 90
   W -> tileToList arr & reverse & transpose -- 90
+orient e _ = error "invalid dir0"
 
-orient S = \case
-
-orient e = error "invalid dir0"
-
--- | Usage example: match tiles id ew, match tiles id sn
-matchT :: Map ID Tile -> ID -> EdgeIx -> Maybe (Dir, IdArray)
-matchT tiles id e0 = asum [
-  findE edgeN <&> (N,),
-  findE edgeS <&> (S,),
-  findE edgeW <&> (W,),
-  findE edgeE <&> (E,)
+-- | Usage example: match tiles id edgeE, match tiles id edgeS
+matchT :: Map ID Tile -> ID -> EdgeIx -> Maybe ((Dir,Bool), IdArray)
+matchT tiles id0 e0 = asum [
+  findE edgeN <&> ((N,True),),
+  findE edgeS <&> ((S,True),),
+  findE edgeW <&> ((W,True),),
+  findE edgeE <&> ((E,True),),
+  findE' edgeN <&> ((N,False),), -- False => matched tile needs to be flipped
+  findE' edgeS <&> ((S,False),),
+  findE' edgeW <&> ((W,False),),
+  findE' edgeE <&> ((E,False),)
   ]
   where
-    findE e1 = find (\(_id, x) ->
-      getEdge (tiles M.! id) e0
+    findE e1 = find (\(id1, x) -> id0 /= id1 &&
+      getEdge (tiles M.! id0) e0
       == reverse (getEdge x e1)) (M.assocs tiles)
+    -- findE' => matched tile needs to be flipped
+    findE' e1 = find (\(id1, x) -> id0 /= id1 &&
+      getEdge (tiles M.! id0) e0
+      == getEdge x e1) (M.assocs tiles)
+
+-- | Usage example: match tiles tile id edgeE, match tiles tile id edgeS
+matchTbyArr :: Map ID Tile -> Tile -> ID -> EdgeIx -> Maybe ((Dir,Bool), IdArray)
+matchTbyArr tiles tile0 id0 e0 = asum [
+  findE edgeN <&> ((N,True),),
+  findE edgeS <&> ((S,True),),
+  findE edgeW <&> ((W,True),),
+  findE edgeE <&> ((E,True),),
+  findE' edgeN <&> ((N,False),), -- False => matched tile needs to be flipped
+  findE' edgeS <&> ((S,False),),
+  findE' edgeW <&> ((W,False),),
+  findE' edgeE <&> ((E,False),)
+  ]
+  where
+    findE e1 = find (\(id1, x) -> id0 /= id1 &&
+      getEdge tile0 e0
+      == reverse (getEdge x e1)) (M.assocs tiles)
+    -- findE' => matched tile needs to be flipped
+    findE' e1 = find (\(id1, x) -> id0 /= id1 &&
+      getEdge tile0 e0
+      == getEdge x e1) (M.assocs tiles)
+
+makeTopRow :: Map ID Tile -> ID -> [([[Bool]], ID)] -- Bool to track if noFlip
+makeTopRow tilesMap topLeftTileId = (tileToList topLeftTile, topLeftTileId) : rest
+  where
+    topLeftTile = tilesMap M.! topLeftTileId
+    rest = unfoldr f (topLeftTile, 11, topLeftTileId)
+    f :: (Tile, Integer, ID)
+      -> Maybe (([[Bool]], Int), (Tile, Integer, Int))
+    f (_,n,_) | n == 0 = Nothing
+    f (tile0, n, id0) =
+      Just ((oriented1, id1), (oriented1Arr, n-1, id1))
+      & trace ("\n" ++ show dir1)
+      where
+        ((dir1,noFlip),(id1,arr1)) = fromMaybe (error "no match") $ matchTbyArr tilesMap tile0 id0 edgeE
+        oriented1 = orient E arr1 dir1 & (if noFlip then id else reverse)
+        oriented1Arr = listArray ((0,0),(9,9)) (concat oriented1)
+
+makeColumn :: Map ID Tile -> ([[Bool]], ID) -> [([[Bool]], ID)]
+makeColumn tilesMap (topTile, topTileId) =
+  (topTile, topTileId) : unfoldr f (topTile', 11, topTileId)
+  where
+    topTile' = listArray ((0,0),(9,9)) $ concat topTile
+    f :: (Tile, Integer, ID)
+      -> Maybe (([[Bool]], Int), (Tile, Integer, Int))    
+    f (_,n,_) | n == 0 = Nothing
+    f (tile0, n, id0) =
+      Just ((oriented1, id1), (oriented1Arr, n-1, id1))
+      -- & trace ("\n" ++ show dir1)
+      where
+        ((dir1,noFlip),(id1,arr1)) = fromMaybe (error "no match") $ matchTbyArr tilesMap tile0 id0 edgeS
+        oriented1 = orient S arr1 dir1 & (if noFlip then id else map reverse)
+        oriented1Arr = listArray ((0,0),(9,9)) (concat oriented1)    
+
+-- -- This shows that the tiles are all correctly aligned!
+-- solve2 :: Map ID Tile -> String
+-- solve2 tilesMap = makeTopRow tilesMap 2207
+--   & map (makeColumn tilesMap) & map (map fst)
+--   & map (map Mat.fromLists)
+--   -- & map (map (Mat.submatrix 2 9 2 9))
+--   & map (foldl1' (Mat.<->)) & foldl1' (Mat.<|>)
+--   & Mat.mapPos (\_ x -> if x then '#' else '.')
+--   & Mat.submatrix 1 30 1 30
+--   & Mat.prettyMatrix
+
+solve2 :: Map ID Tile -> Mat.Matrix Bool
+solve2 tilesMap = makeTopRow tilesMap 2207
+  & map (makeColumn tilesMap) & map (map fst)
+  & map (map Mat.fromLists)
+  & map (map (Mat.submatrix 2 9 2 9))
+  & map (foldl1' (Mat.<->)) & foldl1' (Mat.<|>)
+  -- & Mat.mapPos (\_ x -> if x then '#' else '.')
+  -- & Mat.submatrix 1 30 1 30
+  -- & Mat.prettyMatrix
+
+seaMonsters seaMon = [
+  seaMon,
+  reverse seaMon
+  ] >>= \x -> [
+    x,
+    reverse . transpose $ x,
+    transpose . reverse $ x,
+    reverse . map reverse $ x
+  ]

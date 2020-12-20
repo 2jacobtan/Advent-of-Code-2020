@@ -35,6 +35,7 @@ dependencies:
 - monad-loops
 - ilist
 - extra
+- matrix
 
 library:
   source-dirs: src
