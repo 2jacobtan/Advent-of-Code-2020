@@ -46,6 +46,8 @@ main = do
   let s31 = S.fromList $ mkRule [[31]] . mkRuleMap $ rules
   print s31
   putStrLn $ "S.intersection s42 s31: " ++ show (S.intersection s42 s31)
+  putStrLn $ "S.map length s42: " ++ show (S.map length s42)
+  putStrLn $ "S.map length s31: " ++ show (S.map length s31)
   print $ part2 rules messages
 
 
@@ -95,7 +97,6 @@ mkRule iss ruleMap = go iss
 solve1 :: Num b => Set String -> [(Int, Rule)] -> [String] -> b
 solve1 validMessages rules messages = messages
   & sumOn' (\x -> if S.member x validMessages then 1 else 0)
-
 {- HLINT ignore "Eta reduce" -}
 
 part1 :: Num b => [(Int, Rule)] -> [String] -> b
@@ -106,20 +107,15 @@ part1c rules = solve1 (rules & mkRule [[42,42,31]] . mkRuleMap & S.fromList) rul
 
 -- Part 2
 
--- In addition to Part 1 total, add those that:
+-- Requirement:
 --   repeat 42 N times then repeat 31 M times, N > M, M>=1.
--- 42 does not overlap with 31
--- each candidate in 42 or 31 has length 8
+-- Data characteristics:
+--   rule42 does not overlap with rule31
+--   each candidate in 42 or 31 has length 8
 
 solve2 :: [(Int, Rule)] -> [String] -> Int
-solve2 rules messages = residueMatchTotal  -- + 136
+solve2 rules messages = length . mapMaybe tryMatch $ messages
   where 
-    residualMessages = messages
-      & filter (\x -> not $ S.member x validMessages)
-    validMessages = rules
-      & mkRuleMap
-      & mkRule [[0]] 
-      & S.fromList
     rule42 = rules
       & mkRuleMap
       & mkRule [[42]] 
@@ -128,14 +124,13 @@ solve2 rules messages = residueMatchTotal  -- + 136
       & mkRuleMap
       & mkRule [[31]] 
       & S.fromList
-
-    residueMatchTotal = length . mapMaybe tryMatch $ messages  -- residualMessages
     
     tryMatch :: String -> Maybe ()
     tryMatch xs = let (n,rest) = tryMatch42 xs 0
       in case tryMatch31 rest 0 of
           Just (m,_) -> if n > m && m >=1 then Just () else Nothing
           -- Just (m,_) -> if n == 2 && m == 1 then Just () else Nothing  -- 136
+            -- this gives Part 1 answer
           Nothing -> Nothing
     tryMatch42 :: String -> Int -> (Int, String)
     tryMatch42 [] n = (n,[])
