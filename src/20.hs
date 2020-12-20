@@ -48,8 +48,9 @@ main = do
   putStrLn $ solve2alignment inputMap  -- check alignment
 
   seaMonster <- readFile "20b.txt" <&> lines <&> map (map (=='#'))
-  print ""
-  
+  seaMonsterString <- readFile "20b.txt" <&> lines
+  mapM_ putStrLn seaMonsterString
+
 
 type Parser = Parsec Void String
 type IdArray = (Int, Tile)
