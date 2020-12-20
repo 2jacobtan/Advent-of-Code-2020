@@ -11,9 +11,9 @@
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
 
-import Data.Foldable (Foldable(foldl'))
+import Data.Foldable (asum, find, Foldable(foldl'))
 import Data.Function ((&))
-import Data.Functor ((<&>))
+import Data.Functor (($>), (<&>))
 import Control.Arrow ((>>>))
 import Text.Megaparsec
 import Data.Void (Void)
@@ -22,6 +22,8 @@ import Text.Megaparsec.Char
 import Data.Array
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
+import Data.Maybe (mapMaybe, fromMaybe)
+import Data.Map (Map)
 
 main :: IO ()
 main = do
@@ -32,9 +34,13 @@ main = do
   putStrLn "\n__Part 1"
   print $ length <$> input
   print $ part1 <$> input
+  let inputMap = M.fromList <$> input
+  print $ topLeft <$> inputMap
 
 type Parser = Parsec Void String
-type IdArray = (Int, Array (Int,Int) Bool)
+type IdArray = (Int, Tile)
+type Tile = Array (Int,Int) Bool
+type ID = Int
 
 inputP :: Parser [IdArray]
 inputP = sepBy1 tileP eol
@@ -91,8 +97,58 @@ solve1 idArrays =
   M.unionWith (\(x,n) (y,m) -> (x++y,n+m)) (mkEdgeMap idArrays) (mkEdgeMap' idArrays)
   & M.filter ((==1) . snd)
 
-part1 :: [IdArray] -> Int
 part1 idArrays = solve1 idArrays & M.elems & map fst
   & M.fromListWith (+) . map (,1)
   & M.filter (==4)
-  & M.keys & concat & product
+  & M.keys & concat -- & product
+
+
+-- Part 2
+
+data Dir = N | S | W | E  -- north south west east
+  deriving Show
+type EdgeIx = [(Int,Int)]
+type Edge = [Bool]
+edgeN = (0,) <$> [0..9]  -- north
+edgeS = (9,) <$> [9,8..0]  -- south
+edgeW = (,0) <$> [9,8..0]  -- west
+edgeE = (,9) <$> [0..9]  -- east
+
+getEdge :: Tile -> EdgeIx -> Edge
+getEdge arr edge = (arr !) <$> edge
+
+-- corners (from Part 1): [1693,2111,2207,2339]
+topLeft tiles = [1693,2111,2207,2339]
+  & mapMaybe (\x -> (matchT tiles x edgeE *> matchT tiles x edgeS) <&> (,x))
+
+tileToList :: Tile -> [[Bool]]
+tileToList tile = elems tile & chunksOf 10
+
+-- | align matched tile1 to tile0
+orient E arr = \case
+  W -> tileToList arr -- tile0 E matches tile1 W so already aligned
+  E -> tileToList arr & reverse & map reverse -- 180
+  N -> tileToList arr & transpose & reverse -- counter 90
+  S -> tileToList arr & reverse & transpose -- 90
+orient S arr = \case
+  N -> tileToList arr -- tile0 S matches tile1 N so already aligned
+  S -> tileToList arr & reverse & map reverse -- 180
+  E -> tileToList arr & transpose & reverse -- counter 90
+  W -> tileToList arr & reverse & transpose -- 90
+
+orient S = \case
+
+orient e = error "invalid dir0"
+
+-- | Usage example: match tiles id ew, match tiles id sn
+matchT :: Map ID Tile -> ID -> EdgeIx -> Maybe (Dir, IdArray)
+matchT tiles id e0 = asum [
+  findE edgeN <&> (N,),
+  findE edgeS <&> (S,),
+  findE edgeW <&> (W,),
+  findE edgeE <&> (E,)
+  ]
+  where
+    findE e1 = find (\(_id, x) ->
+      getEdge (tiles M.! id) e0
+      == reverse (getEdge x e1)) (M.assocs tiles)
