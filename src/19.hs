@@ -1,11 +1,5 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
@@ -24,20 +18,24 @@ import qualified Data.IntMap as M
 import Data.IntMap (IntMap)
 import qualified Data.Set as S
 import Data.List.Extra (sumOn')
+import Data.Set (Set)
 
 main = do
   -- inputRaw <- readFile "19.txt"
   -- parseTest inputP inputRaw
   (rules, messages) <- readFile "19.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
   
-  (rulesSample, _) <- readFile "19sample.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
+  -- (rulesSample, _) <- readFile "19sample.txt" <&> parseMaybe inputP <&> fromMaybe (error "failParse")
 
-  print $ mkRule [[0]] . mkRuleMap $ rulesSample
+  -- print $ mkRule [[0]] . mkRuleMap $ rulesSample
 
   putStrLn "\n__Part 1"
   -- mapM_ print rules
   -- print $ mkRule [[0]] . mkRuleMap $ rules
-  -- print $ part1 rules messages
+  
+  -- print $ part1 rules messages  -- [[0]]
+  -- print $ part1b rules messages  -- [[8,11]]
+  -- print $ part1c rules messages  -- [[42,42,31]]
     -- == 136
   
   putStrLn "\n__Part 2"
@@ -94,28 +92,27 @@ mkRule iss ruleMap = go iss
           Val c -> map (c:) (f xs)
         f [] = [[]]
 
-solve1 :: Num b => [(Int, Rule)] -> [String] -> b
-solve1 rules messages = messages
+solve1 :: Num b => Set String -> [(Int, Rule)] -> [String] -> b
+solve1 validMessages rules messages = messages
   & sumOn' (\x -> if S.member x validMessages then 1 else 0)
-  where 
-    validMessages = rules
-      & mkRule [[0]] . mkRuleMap
-      & S.fromList
+
 {- HLINT ignore "Eta reduce" -}
 
 part1 :: Num b => [(Int, Rule)] -> [String] -> b
-part1 = solve1
+part1 rules = solve1 (rules & mkRule [[0]] . mkRuleMap & S.fromList) rules
+part1b rules = solve1 (rules & mkRule [[8,11]] . mkRuleMap & S.fromList) rules
+part1c rules = solve1 (rules & mkRule [[42,42,31]] . mkRuleMap & S.fromList) rules
 
 
 -- Part 2
 
 -- In addition to Part 1 total, add those that:
---   repeat 42 N times then repeat 31 M times, N >= M.
+--   repeat 42 N times then repeat 31 M times, N > M, M>=1.
 -- 42 does not overlap with 31
 -- each candidate in 42 or 31 has length 8
 
 solve2 :: [(Int, Rule)] -> [String] -> Int
-solve2 rules messages = 136 + residueMatchTotal
+solve2 rules messages = residueMatchTotal  -- + 136
   where 
     residualMessages = messages
       & filter (\x -> not $ S.member x validMessages)
@@ -129,21 +126,22 @@ solve2 rules messages = 136 + residueMatchTotal
       & S.fromList
     rule31 = rules
       & mkRuleMap
-      & mkRule [[32]] 
+      & mkRule [[31]] 
       & S.fromList
 
-    residueMatchTotal = length . mapMaybe tryMatch $ residualMessages
+    residueMatchTotal = length . mapMaybe tryMatch $ messages  -- residualMessages
     
     tryMatch :: String -> Maybe ()
     tryMatch xs = let (n,rest) = tryMatch42 xs 0
       in case tryMatch31 rest 0 of
-          Just (m,_) -> if n >= m then Just () else Nothing
+          Just (m,_) -> if n > m && m >=1 then Just () else Nothing
+          -- Just (m,_) -> if n == 2 && m == 1 then Just () else Nothing  -- 136
           Nothing -> Nothing
     tryMatch42 :: String -> Int -> (Int, String)
     tryMatch42 [] n = (n,[])
     tryMatch42  (splitAt 8 -> (start,rest)) n
       | S.member start rule42 = tryMatch42 rest (n+1)
-      | otherwise = (n,rest)
+      | otherwise = (n,start++rest)
     tryMatch31 :: String -> Int -> Maybe (Int, String)
     tryMatch31 [] m = Just (m,[])
     tryMatch31  (splitAt 8 -> (start,rest)) m
