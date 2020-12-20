@@ -19,7 +19,7 @@ import Data.Void (Void)
 import Data.Text (Text)
 import Text.Megaparsec.Char.Lexer (lexeme, decimal)
 import Text.Megaparsec.Char (eol, hspace, letterChar, string)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.IntMap as M
 import Data.IntMap (IntMap)
 import qualified Data.Set as S
@@ -37,7 +37,18 @@ main = do
   putStrLn "\n__Part 1"
   -- mapM_ print rules
   -- print $ mkRule [[0]] . mkRuleMap $ rules
-  print $ part1 rules messages
+  -- print $ part1 rules messages
+    -- == 136
+  
+  putStrLn "\n__Part 2"
+  putStrLn "\nRule42"
+  let s42 = S.fromList $ mkRule [[42]] . mkRuleMap $ rules
+  print s42
+  putStrLn "\nRule31"
+  let s31 = S.fromList $ mkRule [[31]] . mkRuleMap $ rules
+  print s31
+  putStrLn $ "S.intersection s42 s31: " ++ show (S.intersection s42 s31)
+  print $ part2 rules messages
 
 
 -- Parsing 
@@ -98,14 +109,46 @@ part1 = solve1
 
 -- Part 2
 
-solve2 :: Num b => [(Int, Rule)] -> [String] -> b
-solve2 rules messages = messages
-  & sumOn' (\x -> if S.member x validMessages then 1 else 0)
+-- In addition to Part 1 total, add those that:
+--   repeat 42 N times then repeat 31 M times, N >= M.
+-- 42 does not overlap with 31
+-- each candidate in 42 or 31 has length 8
+
+solve2 :: [(Int, Rule)] -> [String] -> Int
+solve2 rules messages = 136 + residueMatchTotal
   where 
+    residualMessages = messages
+      & filter (\x -> not $ S.member x validMessages)
     validMessages = rules
       & mkRuleMap
-      & M.insert 8 (Ref [[42],[42,8]])
-      & M.insert 11 (Ref [[42,31],[42,11,31]])
       & mkRule [[0]] 
       & S.fromList
-{- HLINT ignore "Eta reduce" -}
+    rule42 = rules
+      & mkRuleMap
+      & mkRule [[42]] 
+      & S.fromList
+    rule31 = rules
+      & mkRuleMap
+      & mkRule [[32]] 
+      & S.fromList
+
+    residueMatchTotal = length . mapMaybe tryMatch $ residualMessages
+    
+    tryMatch :: String -> Maybe ()
+    tryMatch xs = let (n,rest) = tryMatch42 xs 0
+      in case tryMatch31 rest 0 of
+          Just (m,_) -> if n >= m then Just () else Nothing
+          Nothing -> Nothing
+    tryMatch42 :: String -> Int -> (Int, String)
+    tryMatch42 [] n = (n,[])
+    tryMatch42  (splitAt 8 -> (start,rest)) n
+      | S.member start rule42 = tryMatch42 rest (n+1)
+      | otherwise = (n,rest)
+    tryMatch31 :: String -> Int -> Maybe (Int, String)
+    tryMatch31 [] m = Just (m,[])
+    tryMatch31  (splitAt 8 -> (start,rest)) m
+      | S.member start rule31 = tryMatch31 rest (m+1)
+      | otherwise = Nothing
+
+part2 :: [(Int, Rule)] -> [String] -> Int
+part2 = solve2
