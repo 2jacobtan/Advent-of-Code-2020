@@ -13,7 +13,7 @@
 module Main where
 
 import Data.Foldable (Foldable(foldl'))
-import Data.Function ((&))
+import Data.Function (on, (&))
 import Data.Functor ((<&>))
 import Control.Arrow ((>>>))
 import Data.Char (digitToInt)
@@ -40,8 +40,11 @@ main = do
   print $ part1 inputActual
 
   putStrLn "\n__Part 2"
-  print $ part2 inputSample 9 100
-  -- print $ part2 inputActual 9 1
+  -- print $ part2 inputSample 9 100
+  -- print $ part2 inputActual 9 100
+  print $ part2 inputActual (10^6) (10^7)
+
+
   
 
 move :: State [Int] ()
@@ -154,7 +157,7 @@ solve2 input fullLen rounds = do
   
   current0 <- readSTRef currentRef
   circle0 <- getElems circleRef
-  trace ("startState: " ++ show current0 ++ show circle0) (return ())
+  -- trace ("startState: " ++ show current0 ++ show circle0) (return ())
   
   replicateM_ rounds (nextState currentRef circleRef)
   current <- readSTRef currentRef
@@ -163,18 +166,22 @@ solve2 input fullLen rounds = do
     readCircle :: Int32 -> ST s Int32
     readCircle = readArray circleRef
 
-  c <- readCircle current
-  c1 <- readCircle c
+  -- c <- readCircle current
+  c1 <- readCircle 1
   c2 <- readCircle c1
-  c3 <- readCircle c2
-  c4 <- readCircle c3
-  c5 <- readCircle c4
-  c6 <- readCircle c5
-  c7 <- readCircle c6
-  c8 <- readCircle c7
-  c9 <- readCircle c8
+  -- c3 <- readCircle c2
+  -- c4 <- readCircle c3
+  -- c5 <- readCircle c4
+  -- c6 <- readCircle c5
+  -- c7 <- readCircle c6
+  -- c8 <- readCircle c7
+  -- c9 <- readCircle c8
+  -- c10 <- readCircle c9
+  -- c11 <- readCircle c10
+  -- return [c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11]
 
-  return [c1,c2,c3,c4,c5,c6,c7,c8,c9]
+  trace ("c1,c2: " ++ show c1 ++ " " ++ show c2) (return ())
+  return [c1,c2]
 
-part2 :: [Int] -> Int -> Int -> [Int32]
-part2 input fullLen rounds = runST $ solve2 input fullLen rounds
+part2 :: [Int] -> Int -> Int -> Integer
+part2 input fullLen rounds = (product . map fromIntegral) $ runST $ solve2 input fullLen rounds
