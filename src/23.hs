@@ -13,7 +13,7 @@ import Control.Arrow ((>>>))
 import Data.Char (digitToInt)
 import Control.Monad.Trans.State.Strict (execState, State, get, put)
 import Data.Ord (comparing, Down(..))
-import Data.List (find, sortBy)
+import Data.List (sortOn, find)
 import Control.Monad (when, replicateM_)
 import Control.Monad.ST (runST,  ST )
 import Data.Array.MArray (getElems, MArray(getBounds), writeArray,  newListArray, readArray )
@@ -45,7 +45,7 @@ move = do
     (head -> current,
     splitAt 3 -> (pickup, rest))) <- get
   let cRest = current : rest
-  let candidates = sortBy (comparing (Down . fst)) (zip cRest [1..]) -- deliberate offset by 1
+  let candidates = sortOn (Down . fst) (zip cRest [1..]) -- deliberate offset by 1
   let targetIx = case find ((< current) . fst) candidates of
         Just (x,i) -> i  -- & trace (show x ++ ", " ++ show i)
         Nothing -> snd $ head candidates
@@ -80,7 +80,7 @@ initSequence input = zip input (tail input ++ [head input])
 fullSequence :: Integral a => [Int] -> Int -> [a]
 fullSequence input fullLen = baseArray ++ [(length input + 2) .. (fullLen + 1)] & map fromIntegral
   where
-    baseArray = initSequence input & sortBy (comparing fst) & map snd
+    baseArray = initSequence input & sortOn fst & map snd
 -- >>> fullSequence inputActual 9
 -- >>> fullSequence inputActual 12
 -- [4,8,9,7,2,1,5,3,6]
