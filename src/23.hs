@@ -152,8 +152,7 @@ solve2 input fullLen rounds = do
   -- trace ("startState: " ++ show current0 ++ show circle0) (return ())
   
   replicateM_ rounds (nextState currentRef circleRef)
-  current <- readSTRef currentRef
-  
+
   let
     readCircle :: Int32 -> ST s Int32
     readCircle = readArray circleRef
