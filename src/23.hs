@@ -20,7 +20,7 @@ import Data.Char (digitToInt)
 import Control.Monad.Trans.State.Strict (execState, State, get, put)
 import Data.Ord (comparing, Down(..))
 import Data.List (find, sortBy)
-import Control.Monad (replicateM_)
+import Control.Monad (when, replicateM_)
 import Control.Monad.ST (runST,  ST )
 import Data.Array.MArray (getElems, MArray(getBounds), writeArray,  newListArray, readArray )
 import Data.Array.ST (STUArray)
@@ -40,7 +40,8 @@ main = do
   print $ part1 inputActual
 
   putStrLn "\n__Part 2"
-  print $ part2 inputActual 9 1
+  print $ part2 inputSample 9 100
+  -- print $ part2 inputActual 9 1
   
 
 move :: State [Int] ()
@@ -72,48 +73,65 @@ part1 input = solve1 input & cycle
 
 -- Gotta implement a graph (cyclic linked list) after all.
 
-circleLength = 10^6
+initSequence input = zip input (tail input ++ [head input])
 
-initSequence input = zip input (tail input) & sortBy (comparing fst)
-  -- & (++ [(last input, length input + 1)])
-initArray input = initSequence input & map snd
+-- >>> initSequence inputSample
 -- >>> initSequence inputActual
--- >>> initArray inputActual
--- [(1,4),(2,8),(3,9),(4,7),(5,2),(6,1),(7,5),(8,3)]
+-- [(3,8),(8,9),(9,1),(1,2),(2,5),(5,4),(4,6),(6,7),(7,3)]
 
--- [4,8,9,7,2,1,5,3]
+-- [(6,1),(1,4),(4,7),(7,5),(5,2),(2,8),(8,3),(3,9),(9,6)]
 
+-- Does NOT yet correctly connect base to extended range
 fullSequence :: Integral a => [Int] -> Int -> [a]
-fullSequence input fullLen = initArray input ++ [(length input + 1) .. fullLen] ++ [head input] & map fromIntegral
+fullSequence input fullLen = baseArray ++ [(length input + 2) .. (fullLen + 1)] & map fromIntegral
+  where
+    baseArray = initSequence input & sortBy (comparing fst) & map snd
 -- >>> fullSequence inputActual 9
 -- >>> fullSequence inputActual 12
 -- [4,8,9,7,2,1,5,3,6]
 
--- [4,8,9,7,2,1,5,3,10,11,12,6]
+-- [4,8,9,7,2,1,5,3,6,11,12,13]
 
-startState :: [Int] -> Int -> ST s ((STRef s Int32), (STUArray s Int32 Int32))
+-- >>> fullSequence inputSample 9
+-- >>> fullSequence inputSample 12
+-- [2,5,8,6,4,7,3,9,1]
+
+-- [2,5,8,6,4,7,3,9,1,11,12,13]
+
+startState :: [Int] -> Int -> ST s (STRef s Int32, STUArray s Int32 Int32)
 startState input fullLen = do
   startCup <- newSTRef $ fromIntegral $ head input
   startCircle <- newListArray (1, fromIntegral fullLen)
-    (fullSequence input (fromIntegral fullLen))
+    (fullSequence input fullLen)
+
+  when (fullLen > length input) $ do
+    -- connect base to extended
+    writeArray startCircle (last input & fromIntegral) (length input + 1 & fromIntegral)
+    writeArray startCircle (fullLen & fromIntegral) (head input & fromIntegral)
+
   return (startCup, startCircle)
 
 nextState :: forall s . STRef s Int32 -> STUArray s Int32 Int32 -> ST s ()
 nextState currentRef circleRef = do
   current <- readSTRef currentRef
+  -- trace ("current: " ++ show current) (return ())
 
   -- pick up
   c1 <- readCircle current
   c2 <- readCircle c1
   c3 <- readCircle c2
   let pickedUp = [c1,c2,c3]
+  -- trace ("pickedUp: " ++ show pickedUp) (return ())
   c4 <- readCircle c3
   writeCircle current c4 
     -- link up current to c4, hence "closing" the circle after pickup
   
   (b,b') <- getBounds circleRef
-  let destination = fromMaybe (error "impossibru") $ find (`notElem` pickedUp) $ [current, (current-1) .. 1]
-        ++ [b', (b'-1) .. (-1)]  -- (-1) for sanity
+  let destination = fromMaybe (error "impossibru") $
+        find (`notElem` pickedUp) $ [(current-1), (current-2) .. 1]
+          ++ [b', (b'-1) .. (-1)]  -- (-1) for sanity
+  -- trace ("destination: " ++ show destination) (return ())
+
 
   -- insert pickedUp into clockwise of destination
   destination1 <- readCircle destination
@@ -133,9 +151,10 @@ nextState currentRef circleRef = do
 solve2 :: forall s . [Int] -> Int -> Int -> ST s [Int32]
 solve2 input fullLen rounds = do
   (currentRef, circleRef) <- startState input fullLen
+  
   current0 <- readSTRef currentRef
   circle0 <- getElems circleRef
-  trace ("startState: " ++ show circle0) (return ())
+  trace ("startState: " ++ show current0 ++ show circle0) (return ())
   
   replicateM_ rounds (nextState currentRef circleRef)
   current <- readSTRef currentRef
