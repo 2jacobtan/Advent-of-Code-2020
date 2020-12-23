@@ -36,6 +36,7 @@ dependencies:
 - ilist
 - extra
 - matrix
+- utility-ht
 
 library:
   source-dirs: src

@@ -3,10 +3,11 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
+{-# LANGUAGE PackageImports #-}
 
 module Main where
 
-import Data.Foldable (Foldable(foldl'))
+import Data.Foldable (foldrM, Foldable(foldl'))
 import Data.Function (on, (&))
 import Data.Functor ((<&>))
 import Control.Arrow ((>>>))
@@ -22,6 +23,7 @@ import Debug.Trace (trace)
 import Data.Int (Int32)
 import Data.STRef (writeSTRef, readSTRef, newSTRef, STRef)
 import Data.Maybe (fromMaybe)
+import Control.Monad.HT (iterateLimit)
 
 inputSample = "389125467" & map digitToInt
 inputActual = "614752839" & map digitToInt
@@ -37,8 +39,6 @@ main = do
   -- print $ part2 inputSample 9 100
   -- print $ part2 inputActual 9 100
   print $ part2 inputActual (10^6) (10^7)
-
-
   
 
 move :: State [Int] ()
@@ -160,22 +160,13 @@ solve2 input fullLen rounds = do
     readCircle :: Int32 -> ST s Int32
     readCircle = readArray circleRef
 
-  -- c <- readCircle current
-  c1 <- readCircle 1
-  c2 <- readCircle c1
-  -- c3 <- readCircle c2
-  -- c4 <- readCircle c3
-  -- c5 <- readCircle c4
-  -- c6 <- readCircle c5
-  -- c7 <- readCircle c6
-  -- c8 <- readCircle c7
-  -- c9 <- readCircle c8
-  -- c10 <- readCircle c9
-  -- c11 <- readCircle c10
-  -- return [c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11]
+  -- iterateLimit 8 readCircle 1  -- for Part 1
+  
+  required <- drop 1 <$> iterateLimit 2 readCircle 1  -- for Part 2
 
-  trace ("c1,c2: " ++ show c1 ++ " " ++ show c2) (return ())
-  return [c1,c2]
+  trace ("c1,c2: " ++ show required) (return ())
+  return required
 
 part2 :: [Int] -> Int -> Int -> Integer
-part2 input fullLen rounds = (product . map fromIntegral) $ runST $ solve2 input fullLen rounds
+part2 input fullLen rounds = (product . map fromIntegral) $
+  runST $ solve2 input fullLen rounds

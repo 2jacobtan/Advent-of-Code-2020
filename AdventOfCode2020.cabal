@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a95b3a245d224d8b1b70216b74725f4facbda5c1c7dda366e45e92cb36184a08
+-- hash: f883fb7389d50cd612afc7bb9e206027d902f8e88cb8e616f9d49c83714092c8
 
 name:           AdventOfCode2020
 version:        0.1.0.0
@@ -50,6 +50,7 @@ library
     , strict-tuple
     , text
     , transformers
+    , utility-ht
     , vector
   default-language: Haskell2010
 
@@ -77,6 +78,7 @@ executable AdventOfCode2020-exe
     , strict-tuple
     , text
     , transformers
+    , utility-ht
     , vector
   default-language: Haskell2010
 
@@ -105,5 +107,6 @@ test-suite AdventOfCode2020-test
     , strict-tuple
     , text
     , transformers
+    , utility-ht
     , vector
   default-language: Haskell2010
