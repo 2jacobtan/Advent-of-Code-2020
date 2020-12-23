@@ -3,7 +3,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
-{-# LANGUAGE PackageImports #-}
 
 module Main where
 
@@ -23,7 +22,6 @@ import Debug.Trace (trace)
 import Data.Int (Int32)
 import Data.STRef (writeSTRef, readSTRef, newSTRef, STRef)
 import Data.Maybe (fromMaybe)
-import Control.Monad.HT (iterateLimit)
 
 inputSample = "389125467" & map digitToInt
 inputActual = "614752839" & map digitToInt
@@ -170,3 +168,13 @@ solve2 input fullLen rounds = do
 part2 :: [Int] -> Int -> Int -> Integer
 part2 input fullLen rounds = (product . map fromIntegral) $
   runST $ solve2 input fullLen rounds
+
+-- copied from https://hackage.haskell.org/package/utility-ht-0.0.15/docs/src/Control.Monad.HT.html#iterateLimit
+iterateLimit :: Monad m => Int -> (a -> m a) -> a -> m [a]
+iterateLimit m f =
+   let aux n x =
+          fmap (x:) $
+          if n==0
+            then return []
+            else aux (n-1) =<< f x
+   in  aux m
