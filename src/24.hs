@@ -21,6 +21,8 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Data.Void (Void)
 import Data.Maybe (fromMaybe)
+import Data.Functor.Identity (Identity(..))
+import qualified Data.Set as S
 
 type Parser = Parsec Void String
 
@@ -29,6 +31,8 @@ main = do
   -- parseTest input1P inputRaw
   let input1 = fromMaybe (error "failParse") $ parseMaybe input1P inputRaw
   putStrLn "\n__Part 1"
+  -- print $ solve1 input1
+  print $ part1 input1
 
 
 -- Hexagonal tiling can be represented as a 2D plane.
@@ -63,4 +67,16 @@ input1P = sepBy1 (some dirVecP) eol
 
 
 -- Part 1
+
+handleTile :: Ord a => S.Set a -> a -> S.Set a
+handleTile tileSet tile = runIdentity $ S.alterF (Identity . not) tile tileSet
+
+solve1 :: (Foldable t, Num a, Ord a) => [t a] -> S.Set a
+solve1 tiles = map sum tiles & foldl' handleTile S.empty
+
+part1 :: (Foldable t, Num a, Ord a) => [t a] -> Int
+part1 tiles = S.size $ solve1 tiles
+
+
+-- Part 2
 

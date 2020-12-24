@@ -24,7 +24,7 @@ dependencies:
 - pretty-simple
 - megaparsec >= 9.0.0
 - text
-- containers
+- containers >= 0.6.3.1
 - transformers
 - split
 - array
