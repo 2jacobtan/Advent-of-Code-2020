@@ -98,15 +98,15 @@ blackNeigboursMap tileSet = concatMap (map (,1) . adjacents) tileSet
   & M.fromListWith (+)
 
 eachDay :: S.Set (V2 Integer) -> S.Set (V2 Integer)
-eachDay tileSet = foldl' handleTile tileSet tilesToFlip
+eachDay tileSet = keepBlack <> turnBlack
   where
     blackNeibsMap = blackNeigboursMap tileSet
     blackTilesMap = blackNeibsMap `M.restrictKeys` tileSet
     whiteTilesMap = blackNeibsMap `M.withoutKeys` tileSet
-    tilesToFlip =
-      M.filter (\x -> x == (0 + 1) || x > 2 + 1) blackTilesMap
+    keepBlack =
+      M.filter (not . (\x -> x == (0 + 1) || x > 2 + 1)) blackTilesMap & M.keysSet
         -- +1 cuz black self is included
-      <> M.filter (==2) whiteTilesMap
+    turnBlack = M.filter (==2) whiteTilesMap
       & M.keysSet
 
 
