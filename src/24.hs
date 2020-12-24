@@ -1,12 +1,7 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Wincomplete-uni-patterns #-}
 
@@ -15,17 +10,20 @@ import Data.Function ((&))
 import Data.Functor (($>), (<&>))
 import Control.Arrow ((>>>))
 
-import Linear.V2
+import Linear.V2 ( V2(..) )
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
+    ( (<|>), sepBy1, some, MonadParsec(try), parseMaybe, Parsec )
+import Text.Megaparsec.Char ( eol )
 import Data.Void (Void)
 import Data.Maybe (fromMaybe)
 import Data.Functor.Identity (Identity(..))
 import qualified Data.Set as S
+import qualified Data.Map.Strict as M
 
 type Parser = Parsec Void String
 
+main :: IO ()
 main = do
   inputRaw <- readFile "24.txt"
   -- parseTest input1P inputRaw
@@ -33,6 +31,16 @@ main = do
   putStrLn "\n__Part 1"
   -- print $ solve1 input1
   print $ part1 input1
+
+  putStrLn "\n__Part 2"
+  
+  inputRawSample <- readFile "24sample.txt"
+  let inputSample = fromMaybe (error "failParse") $ parseMaybe input1P inputRawSample
+  let sampleSolution = solve2sample inputSample
+  print $ sampleSolution & take 11
+  print $ map (sampleSolution !!) [20,30 .. 100]
+  
+  print $ part2 input1
 
 
 -- Hexagonal tiling can be represented as a 2D plane.
@@ -79,4 +87,35 @@ part1 tiles = S.size $ solve1 tiles
 
 
 -- Part 2
+
+adjacents :: V2 Integer -> [V2 Integer]
+adjacents tile = tile : map (+ tile) allDirs -- include itself
+  where
+    allDirs = [E , W , NE , NW , SE , SW] & map dirToVec
+
+blackNeigboursMap :: (Foldable t, Num a) => t (V2 Integer) -> M.Map (V2 Integer) a
+blackNeigboursMap tileSet = concatMap (map (,1) . adjacents) tileSet
+  & M.fromListWith (+)
+
+eachDay :: S.Set (V2 Integer) -> S.Set (V2 Integer)
+eachDay tileSet = foldl' handleTile tileSet tilesToFlip
+  where
+    blackNeibsMap = blackNeigboursMap tileSet
+    blackTilesMap = blackNeibsMap `M.restrictKeys` tileSet
+    whiteTilesMap = blackNeibsMap `M.withoutKeys` tileSet
+    tilesToFlip =
+      M.filter (\x -> x == (0 + 1) || x > 2 + 1) blackTilesMap
+        -- +1 cuz black self is included
+      <> M.filter (==2) whiteTilesMap
+      & M.keysSet
+
+
+solve2 :: S.Set (V2 Integer) -> S.Set (V2 Integer)
+solve2 tiles = tiles & foldr (.) id (replicate 100 eachDay)
+
+part2 :: Foldable t => [t (V2 Integer)] -> Int
+part2 tiles = solve1 tiles & solve2 & S.size
+
+solve2sample :: Foldable t => [t (V2 Integer)] -> [Int]
+solve2sample tiles = solve1 tiles & iterate eachDay & map S.size
 
