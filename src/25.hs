@@ -19,18 +19,19 @@ import Control.Arrow ((>>>))
 import Data.List (iterate', find)
 import Data.Maybe (mapMaybe)
 import Debug.Trace (trace)
+import Math.NumberTheory.Moduli (powMod)
 
 main = do
   putStrLn "Hello."
   print $ part1 ()
 
 -- sample input
-num1 = 5764801
-num2 = 17807724
+-- num1 = 5764801
+-- num2 = 17807724
 
 -- input
--- num1 = 9232416
--- num2 = 14144084
+num1 = 9232416
+num2 = 14144084
 
 num12 = mod (num1 * num2) m
 
