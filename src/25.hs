@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -20,7 +19,6 @@ import Control.Arrow ((>>>))
 import Data.List (iterate', find)
 import Data.Maybe (mapMaybe)
 import Debug.Trace (trace)
-import Math.NumberTheory.Moduli (KnownNat, Mod, powMod)
 
 main = do
   putStrLn "Hello."
@@ -63,7 +61,6 @@ solve1 b = do
   sumXY <- findPow b num12 m
   findXY b sumXY 
 
-part1 :: p -> (Integer, Integer, Integer)
 part1 _ = mapMaybe solve1 [2..100] & take 1 & head
   -- <&> (<&>
   -- (\sol1@(b, fromIntegral -> x, fromIntegral -> y) ->
@@ -73,9 +70,3 @@ part1 _ = mapMaybe solve1 [2..100] & take 1 & head
   --   ))
   -- )
 
-part1ans :: KnownNat m => Mod m
-part1ans = n1 -- n2
-  where
-    (base,e1,e2) = part1 ()
-    n1 = powMod (base :: Mod m) e1
-    -- n2 = powMod (fromIntegral n1 :: Mod m) e2
