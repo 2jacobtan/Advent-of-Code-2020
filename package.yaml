@@ -37,6 +37,7 @@ dependencies:
 - extra
 - matrix
 # - utility-ht for iterateLimit
+- arithmoi
 
 library:
   source-dirs: src
