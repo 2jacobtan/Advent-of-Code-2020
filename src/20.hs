@@ -281,7 +281,9 @@ findSeaMons mat seaMon = mapMaybe findAtOffset offsets & S.unions
             seaP = Mat.getElem i j seaMon,
         seaP -- Bool
         ]
-      & foldr (\x r -> S.insert <$> x <*> r) (Just S.empty)
+      & sequence <&> S.fromList
+      -- & foldr (\x r -> S.insert <$> x <*> r) (Just S.empty)
+        --- ^ foldr refactored to sequence instead
 
 part2 :: Map ID Tile -> [[Char]] -> Int
 part2 matMap seaMon = map (findSeaMons mat) (seaMonsters seaMon) & S.unions
