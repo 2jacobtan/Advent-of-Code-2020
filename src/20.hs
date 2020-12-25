@@ -29,8 +29,11 @@ import Control.Monad (replicateM_)
 import Data.List.Split (chunksOf)
 import Debug.Trace (trace)
 import Data.Bits (Bits(xor))
+import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mat
 import Prelude hiding (GHC.Show.Bool)
+import Data.Set (Set)
+import Data.Bool (bool)
 
 main :: IO ()
 main = do
@@ -50,6 +53,9 @@ main = do
   seaMonster <- readFile "20b.txt" <&> lines <&> map (map (=='#'))
   seaMonsterString <- readFile "20b.txt" <&> lines
   mapM_ putStrLn seaMonsterString
+  let inputMat = solve2 inputMap; rows = Mat.nrows inputMat; cols = Mat.ncols inputMat
+  print ((rows,cols),rows*cols)
+  print $ part2 inputMap seaMonsterString
 
 
 type Parser = Parsec Void String
@@ -248,14 +254,37 @@ solve2 tilesMap = makeTopRow tilesMap 2207
   -- & Mat.submatrix 1 30 1 30
   -- & Mat.prettyMatrix
 
+seaMonsters :: [[Char]] -> [Matrix Bool]
 seaMonsters seaMon = [
-  seaMon,
-  reverse seaMon -- flip
+  seaMon <&> (<&> (=='#')),
+  reverse seaMon <&> (<&> (=='#')) -- flip
   ] >>= \x -> [
     x,
     reverse . transpose $ x, -- rotations
     transpose . reverse $ x,
     reverse . map reverse $ x
   ]
+  <&> Mat.fromLists
 
-findSeaMons mat sea = undefined
+findSeaMons :: Matrix Bool -> Matrix Bool -> Set (Int, Int)
+findSeaMons mat seaMon = mapMaybe findAtOffset offsets & S.unions
+  where
+    matRows = Mat.nrows mat; seaRows = Mat.nrows seaMon
+    matCols = Mat.ncols mat; seaCols = Mat.ncols seaMon
+    offsets = [(i,j) | i <- [0..matRows - seaRows], j <- [0..matCols - seaCols]]
+    
+    findAtOffset :: (Int, Int) -> Maybe (Set (Int, Int))
+    findAtOffset (i0, j0) =
+      [if matP then Just (i1,j1) else Nothing
+      | i <- [1..seaRows], j <- [1..seaCols],
+        let (i1,j1) = (i0+i,j0+j); matP = Mat.getElem i1 j1 mat
+            seaP = Mat.getElem i j seaMon,
+        seaP -- Bool
+        ]
+      & foldr (\x r -> S.insert <$> x <*> r) (Just S.empty)
+
+part2 :: Map ID Tile -> [[Char]] -> Int
+part2 matMap seaMon = map (findSeaMons mat) (seaMonsters seaMon) & S.unions
+  & S.size & ((Mat.mapPos (const (bool 0 1)) mat & sum) -)
+  where mat = solve2 matMap
+
